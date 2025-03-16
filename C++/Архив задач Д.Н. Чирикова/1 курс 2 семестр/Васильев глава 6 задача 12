@@ -1,0 +1,113 @@
+///Васильев глава 6 задача 12
+#include <iostream>
+#include <cmath>
+using namespace std;
+
+struct Complex {
+    double modul;
+    double argument;
+};
+
+Complex toAlgebraic(const Complex& c) {
+    Complex result;
+    result.modul = c.modul * cos(c.argument);
+    result.argument = c.modul * sin(c.argument);
+    return result;
+}
+
+Complex toTrigonometric(double real, double imag) {
+    Complex result;
+    result.modul = sqrt(real * real + imag * imag);
+    result.argument = atan2(imag, real);
+    return result;
+}
+
+Complex add(const Complex& a, const Complex& b) {
+    Complex a_alg = toAlgebraic(a);
+    Complex b_alg = toAlgebraic(b);
+    double real = a_alg.modul + b_alg.modul;
+    double imag = a_alg.argument + b_alg.argument;
+    return toTrigonometric(real, imag);
+}
+
+Complex subtract(const Complex& a, const Complex& b) {
+    Complex a_alg = toAlgebraic(a);
+    Complex b_alg = toAlgebraic(b);
+    double real = a_alg.modul - b_alg.modul;
+    double imag = a_alg.argument - b_alg.argument;
+    return toTrigonometric(real, imag);
+}
+
+Complex multiply(const Complex& a, const Complex& b) {
+    Complex result;
+    result.modul = a.modul * b.modul;
+    result.argument = a.argument + b.argument;
+    return result;
+}
+
+Complex divide(const Complex& a, const Complex& b) {
+    Complex result;
+    if (b.modul == 0) {
+        cout << "Error: Division by zero!" << endl;
+        return { 0, 0 };
+    }
+    result.modul = a.modul / b.modul;
+    result.argument = a.argument - b.argument;
+    return result;
+}
+
+void printComplex(const Complex& c) {
+    cout << c.modul << " * (cos(" << c.argument << ") + i*sin(" << c.argument << "))";
+}
+
+int main() {
+    Complex num1, num2;
+    double real, imag;
+
+    cout << "Enter the modul of the 1st complex number: ";
+    cin >> real;
+    cout << "Enter the argument of the 1st complex number: ";
+    cin >> imag;
+    num1 = toTrigonometric(real, imag);
+
+    cout << "Enter the modul of the 2nd complex number: ";
+    cin >> real;
+    cout << "Enter the argument of the 2nd complex number: ";
+    cin >> imag;
+    num2 = toTrigonometric(real, imag);
+
+    char oper;
+    do {
+        cout << "Choose operation (+, -, /, * or 'q' to quit): ";
+        cin >> oper;
+
+        switch (oper) {
+        case '+':
+            cout << "Sum: ";
+            printComplex(add(num1, num2));
+            cout << endl;
+            break;
+        case '-':
+            cout << "Difference: ";
+            printComplex(subtract(num1, num2));
+            cout << endl;
+            break;
+        case '*':
+            cout << "Product: ";
+            printComplex(multiply(num1, num2));
+            cout << endl;
+            break;
+        case '/':
+            cout << "Quotient: ";
+            printComplex(divide(num1, num2));
+            cout << endl;
+            break;
+        case 'q':
+            break;
+        default:
+            cout << "Invalid operation! Please try again." << endl;
+            break;
+        }
+    } while (oper != 'q');
+    return 0;
+}

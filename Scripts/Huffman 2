@@ -1,0 +1,116 @@
+const fs = require('fs');
+
+class HuffmanNode {
+    constructor(char, freq, left = null, right = null) {
+        this.char = char;
+        this.freq = freq;
+        this.left = left;
+        this.right = right;
+    }
+}
+
+function buildFrequencyTable(str) {
+    const freqTable = {};
+    for (const char of str) freqTable[char] = (freqTable[char] || 0) + 1;
+    return freqTable;
+}
+
+function buildHuffmanTree(freqTable) {
+    const nodes = Object.entries(freqTable).map(([char, freq]) => new HuffmanNode(char, freq));
+    while (nodes.length > 1) {
+        nodes.sort((a, b) => a.freq - b.freq);
+        const left = nodes.shift();
+        const right = nodes.shift();
+        nodes.push(new HuffmanNode(null, left.freq + right.freq, left, right));
+    }
+    return nodes[0];
+}
+
+function buildCodeTable(root, code = '', codeTable = {}) {
+    if (root.char !== null) codeTable[root.char] = code;
+    else {
+        buildCodeTable(root.left, code + '0', codeTable);
+        buildCodeTable(root.right, code + '1', codeTable);
+    }
+}
+
+function encodeString(str, codeTable) {
+    return str.split('').map(char => codeTable[char]).join('');
+}
+
+function padBinaryString(binStr, paddingChar) {
+    return binStr + paddingChar.repeat((8 - (binStr.length % 8)) % 8);
+}
+
+function binaryToAscii(binStr) {
+    let asciiStr = '';
+    for (let i = 0; i < binStr.length; i += 8)
+        asciiStr += String.fromCharCode(parseInt(binStr.substring(i, i + 8), 2));
+    return asciiStr;
+}
+
+function asciiToBinary(asciiStr) {
+    return asciiStr.split('').map(char => char.charCodeAt(0).toString(2).padStart(8, '0')).join('');
+}
+
+function huffmanEncode(str) {
+    str += "#";
+    const freqTable = buildFrequencyTable(str);
+    const huffmanTree = buildHuffmanTree(freqTable);
+    const codeTable = {};
+    buildCodeTable(huffmanTree, '', codeTable);
+
+    const encodedStr = encodeString(str, codeTable);
+    const paddedStr = padBinaryString(encodedStr, codeTable['#'].slice(-1));
+    const asciiStr = binaryToAscii(paddedStr);
+
+    fs.writeFileSync('codes.json', JSON.stringify(Object.fromEntries(Object.entries(codeTable).map(([char, code]) => [code, char]))));
+    return asciiStr;
+}
+
+function huffmanDecode(asciiStr) {
+    const invertedCodeTable = JSON.parse(fs.readFileSync('codes.json', 'utf8'));
+    const binStr = asciiToBinary(asciiStr);
+
+    let decodedStr = '';
+    let currentCode = '';
+    for (const bit of binStr) {
+        currentCode += bit;
+        if (invertedCodeTable[currentCode]) {
+            decodedStr += invertedCodeTable[currentCode];
+            currentCode = '';
+        }
+    }
+    return decodedStr.replace(/#+$/, '');
+}
+
+function main() {
+    const args = process.argv.slice(2);
+    const [command, inputFileName] = args;
+
+    if (!command || !inputFileName) {
+        console.log("Использование: node huffman.js [-e | -d] <имя файла>");
+        return;
+    }
+
+    switch (command) {
+        case "-e":
+        case "--encode":
+            const inputStr = fs.readFileSync(inputFileName, "utf-8");
+            const encodedStr = huffmanEncode(inputStr);
+            fs.writeFileSync("HuffmanEncoded.txt", encodedStr, "utf-8");
+            console.log("Закодированная строка:", encodedStr);
+            break;
+        case "-d":
+        case "--decode":
+            const encodedInput = fs.readFileSync(inputFileName, "utf-8");
+            const decodedStr = huffmanDecode(encodedInput);
+            console.log("Декодированная строка:", decodedStr);
+            break;
+        default:
+            console.log("Ошибка: неизвестная команда");
+            break;
+    }
+}
+
+main();

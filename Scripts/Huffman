@@ -1,3 +1,5 @@
+//8 баллов, потому что код "без изюминки"
+
 class HuffmanNode {
     constructor(char, freq, left = null, right = null) {
         this.char = char;

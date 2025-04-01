@@ -1,0 +1,85 @@
+#include <iostream>
+#include <fstream>
+#include <string>
+
+using namespace std;
+
+struct Programmer {
+    string name;
+    string date;
+    int y, m, d;
+};
+
+void parseDate(Programmer& p) {
+    string months[] = { "January","February","March","April","May","June",
+                      "July","August","September","October","November","December" };
+    int space = p.date.find(' ');
+    string month = p.date.substr(0, space);
+
+    p.m = 1;
+    for (int i = 0; i < 12; i++) {
+        if (months[i] == month) {
+            p.m = i + 1;
+            break;
+        }
+    }
+
+    int comma = p.date.find(',');
+    p.d = stoi(p.date.substr(space + 1, comma - space - 1));
+    p.y = stoi(p.date.substr(comma + 2));
+}
+
+void sortProgrammers(Programmer list[], int count) {
+    for (int i = 0; i < count - 1; i++) {
+        for (int j = 0; j < count - i - 1; j++) {
+            if (list[j].y > list[j + 1].y) {
+                swap(list[j], list[j + 1]);
+            }
+            else if (list[j].y == list[j + 1].y && list[j].m > list[j + 1].m) {
+                swap(list[j], list[j + 1]);
+            }
+            else if (list[j].y == list[j + 1].y && list[j].m == list[j + 1].m && list[j].d > list[j + 1].d) {
+                swap(list[j], list[j + 1]);
+            }
+        }
+    }
+}
+
+int main() {
+    ifstream in("programmers.txt");
+    if (!in) {
+        cout << "Ошибка открытия файла!" << endl;
+        return 1;
+    }
+
+    Programmer list[50];
+    int count = 0;
+    string line;
+
+    while (getline(in, line) && count < 50) {
+        int tab = line.find('\t');
+        if (tab == string::npos) continue;
+
+        list[count].name = line.substr(0, tab);
+        list[count].date = line.substr(tab + 1);
+        parseDate(list[count]);
+        count++;
+    }
+    in.close();
+
+    sortProgrammers(list, count);
+
+    ofstream out("sorted_programmers.txt");
+    if (!out) {
+        cout << "Error!" << endl;
+        return 1;
+    }
+
+    for (int i = 0; i < count; i++) {
+        out << list[i].name << "\t" << list[i].date << endl;
+    }
+    out.close();
+
+    cout << "File sorted!" << endl;
+    return 0;
+}

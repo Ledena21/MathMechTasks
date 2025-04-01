@@ -3,50 +3,51 @@
 #include <cmath>
 using namespace std;
 
-struct Complex {
+struct AlgebraicComplex {
+    double real;
+    double imaginary;
+};
+
+struct TrigonometricComplex {
     double modul;
     double argument;
 };
 
-Complex toAlgebraic(const Complex& c) {
-    Complex result;
-    result.modul = c.modul * cos(c.argument);
-    result.argument = c.modul * sin(c.argument);
+AlgebraicComplex toAlgebraic(const TrigonometricComplex& c) {
+    AlgebraicComplex result;
+    result.real = c.modul * cos(c.argument);
+    result.imaginary = c.modul * sin(c.argument);
     return result;
 }
 
-Complex toTrigonometric(double real, double imag) {
-    Complex result;
+TrigonometricComplex toTrigonometric(double real, double imag) {
+    TrigonometricComplex result;
     result.modul = sqrt(real * real + imag * imag);
     result.argument = atan2(imag, real);
     return result;
 }
 
-Complex add(const Complex& a, const Complex& b) {
-    Complex a_alg = toAlgebraic(a);
-    Complex b_alg = toAlgebraic(b);
-    double real = a_alg.modul + b_alg.modul;
-    double imag = a_alg.argument + b_alg.argument;
-    return toTrigonometric(real, imag);
+TrigonometricComplex add(const TrigonometricComplex& a, const TrigonometricComplex& b) {
+    AlgebraicComplex a_alg = toAlgebraic(a);
+    AlgebraicComplex b_alg = toAlgebraic(b);
+    return toTrigonometric(a_alg.real + b_alg.real, a_alg.imaginary + b_alg.imaginary);
 }
 
-Complex subtract(const Complex& a, const Complex& b) {
-    Complex a_alg = toAlgebraic(a);
-    Complex b_alg = toAlgebraic(b);
-    double real = a_alg.modul - b_alg.modul;
-    double imag = a_alg.argument - b_alg.argument;
-    return toTrigonometric(real, imag);
+TrigonometricComplex subtract(const TrigonometricComplex& a, const TrigonometricComplex& b) {
+    AlgebraicComplex a_alg = toAlgebraic(a);
+    AlgebraicComplex b_alg = toAlgebraic(b);
+    return toTrigonometric(a_alg.real - b_alg.real, a_alg.imaginary - b_alg.imaginary);
 }
 
-Complex multiply(const Complex& a, const Complex& b) {
-    Complex result;
+TrigonometricComplex multiply(const TrigonometricComplex& a, const TrigonometricComplex& b) {
+    TrigonometricComplex result;
     result.modul = a.modul * b.modul;
     result.argument = a.argument + b.argument;
     return result;
 }
 
-Complex divide(const Complex& a, const Complex& b) {
-    Complex result;
+TrigonometricComplex divide(const TrigonometricComplex& a, const TrigonometricComplex& b) {
+    TrigonometricComplex result;
     if (b.modul == 0) {
         cout << "Error: Division by zero!" << endl;
         return { 0, 0 };
@@ -56,25 +57,24 @@ Complex divide(const Complex& a, const Complex& b) {
     return result;
 }
 
-void printComplex(const Complex& c) {
+void printComplex(const TrigonometricComplex& c) {
     cout << c.modul << " * (cos(" << c.argument << ") + i*sin(" << c.argument << "))";
 }
 
 int main() {
-    Complex num1, num2;
     double real, imag;
 
     cout << "Enter the modul of the 1st complex number: ";
     cin >> real;
     cout << "Enter the argument of the 1st complex number: ";
     cin >> imag;
-    num1 = toTrigonometric(real, imag);
+    TrigonometricComplex num1 = toTrigonometric(real, imag);
 
     cout << "Enter the modul of the 2nd complex number: ";
     cin >> real;
     cout << "Enter the argument of the 2nd complex number: ";
     cin >> imag;
-    num2 = toTrigonometric(real, imag);
+    TrigonometricComplex num2 = toTrigonometric(real, imag);
 
     char oper;
     do {

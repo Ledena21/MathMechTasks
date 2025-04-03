@@ -35,7 +35,7 @@ function HammingEncode(s){
             pp += 1;
             }
         }
-        p.unshift(pp%2);
+        p.push(pp%2);
     }
 
     let ksArray = ks.split('');

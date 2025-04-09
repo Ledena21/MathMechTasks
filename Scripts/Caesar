@@ -1,0 +1,108 @@
+let fs = require('fs');
+
+function CaesarEncode(s, shift) {
+    let result = '';
+    for (let i = 0; i < s.length; i++) {
+        result += String.fromCharCode(s.charCodeAt(i) + shift);
+    }
+    return result;
+}
+
+function CaesarDecode(s) {
+    let book = fs.readFileSync("HarryPotter.txt", "utf-8");
+    let bookFreq = {};
+    let totalChars = 0;
+
+    for (let char of book) {
+        let code = char.charCodeAt(0);
+        if (code >= 32 && code <= 126) {
+            bookFreq[char] = (bookFreq[char] || 0) + 1;
+            totalChars++;
+        }
+    }
+
+    let minMSE = Infinity;
+    let bestShift = 0;
+    let bestDecoded = '';
+
+
+    for (let shift = 0; shift < 256; shift++) {
+        let mse = 0;
+        let decoded = '';
+            
+        for (let i = 0; i < s.length; i++) {
+            let code = s.charCodeAt(i) - shift; 
+            if (code < 0) code += 256;
+            decoded += String.fromCharCode(code);
+        }
+
+        let decodedFreq = {};
+        let decodedTotal = 0;
+        for (let char of decoded) {
+            let code = char.charCodeAt(0);
+            if (code >= 32 && code <= 126) {
+                decodedFreq[char] = (decodedFreq[char] || 0) + 1;
+                decodedTotal++;
+            }
+        }
+
+        for (let char in bookFreq) {
+            let expectedFreq = bookFreq[char] / totalChars;
+            let actualFreq = (decodedFreq[char] || 0) / (decodedTotal || 1);
+            mse += Math.pow(actualFreq - expectedFreq, 2);
+        }
+
+        let bonusChars = ['_', 'w', 'o', 'r', 'k', 'i', 's', 'n', 't', 'l', 'f'];
+        for (let char of bonusChars) {
+            if (decoded.includes(char)) {
+                mse *= 0.9;
+            }
+        }
+
+        for (let char of decoded) {
+            let code = char.charCodeAt(0);
+            if (code < 32 || code > 126) {
+                mse += 0.5;
+            }
+        }
+
+        if (mse < minMSE) {
+            minMSE = mse;
+            bestShift = shift;
+            bestDecoded = decoded;
+        }
+    }
+
+    return bestDecoded;
+}
+
+
+
+let args = process.argv.slice(2);
+
+
+
+switch (args[0]) {
+    case "-h":
+    case "--help":
+        console.log("  Encode: node caesar.js -e <input> <output> <shift>");
+        console.log("  Decode: node caesar.js -d <input> <output>");
+        console.log("Required: book.txt for frequency analysis");
+        break;
+    case "-e":
+    case "--encode":
+        let einput = fs.readFileSync(args[1], "utf-8");
+        let encoded = CaesarEncode(einput, parseInt(args[3]));
+        fs.writeFileSync(args[2], encoded, "utf-8");
+        console.log(`File encoded successfully with shift ${args[3]}`);
+        break;
+    case "-d":
+    case "--decode":
+        let dinput = fs.readFileSync(args[1], "utf-8");
+        let decoded = CaesarDecode(dinput);
+        fs.writeFileSync(args[2], decoded, "utf-8");
+        console.log("File decoded successfully");
+        break;
+    default:
+        console.log("Invalid option. Use -h for help.");
+}

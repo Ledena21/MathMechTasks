@@ -11,10 +11,10 @@ struct Programmer {
 };
 
 void parseDate(Programmer& p) {
-    string months[] = { "January","February","March","April","May","June",
+    string months[12] = { "January","February","March","April","May","June",
                       "July","August","September","October","November","December" };
-    int space = p.date.find(' ');
-    string month = p.date.substr(0, space);
+    int space = p.date.find(' '); //нашли первый пробел
+    string month = p.date.substr(0, space); //взяли название месяца (с начала до пробела)
 
     p.m = 1;
     for (int i = 0; i < 12; i++) {
@@ -24,9 +24,9 @@ void parseDate(Programmer& p) {
         }
     }
 
-    int comma = p.date.find(',');
-    p.d = stoi(p.date.substr(space + 1, comma - space - 1));
-    p.y = stoi(p.date.substr(comma + 2));
+    int comma = p.date.find(','); //нашли запятую
+    p.d = stoi(p.date.substr(space + 1, comma - space - 1)); //берем день
+    p.y = stoi(p.date.substr(comma + 2)); //две позиции после запятой, берем год
 }
 
 void sortProgrammers(Programmer list[], int count) {
@@ -48,22 +48,32 @@ void sortProgrammers(Programmer list[], int count) {
 int main() {
     ifstream in("programmers.txt");
     if (!in) {
-        cout << "Ошибка открытия файла!" << endl;
+        cout << "Error of opening file!" << endl;
         return 1;
     }
 
-    Programmer list[50];
     int count = 0;
     string line;
+    while (getline(in, line)) {
+        if (line.find('\t') != string::npos) {
+            count++;
+        }
+    }
+    in.clear();
+    in.seekg(0);
 
-    while (getline(in, line) && count < 50) {
+    Programmer* list = new Programmer[count];
+
+    int index = 0;
+    while (getline(in, line)) {
         int tab = line.find('\t');
-        if (tab == string::npos) continue;
-
-        list[count].name = line.substr(0, tab);
-        list[count].date = line.substr(tab + 1);
-        parseDate(list[count]);
-        count++;
+        if (tab == string::npos) {
+            continue;
+        }
+        list[index].name = line.substr(0, tab); // взяли имя
+        list[index].date = line.substr(tab + 1); // взяли дату
+        parseDate(list[index]);
+        index++;
     }
     in.close();
 
@@ -72,13 +82,15 @@ int main() {
     ofstream out("sorted_programmers.txt");
     if (!out) {
         cout << "Error!" << endl;
+        delete[] list;
         return 1;
     }
-
     for (int i = 0; i < count; i++) {
         out << list[i].name << "\t" << list[i].date << endl;
     }
     out.close();
+
+    delete[] list;
 
     cout << "File sorted!" << endl;
     return 0;

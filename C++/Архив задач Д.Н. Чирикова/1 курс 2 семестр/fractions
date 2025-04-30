@@ -1,0 +1,130 @@
+#include <iostream>
+using namespace std;
+
+class Rational {
+private:
+    int Num; //числитель
+    int Den; //знаменатель
+
+    //это я типа умный и нашел НОД алгоритмом Евклида
+    int nod(int a, int b) {
+        while (b != 0) {
+            int temp = b;
+            b = a % b;
+            a = temp;
+        }
+        return a;
+    }
+
+    //функция которая сокращает
+    void reduce() {
+        int mynod = nod(Num, Den);  // НОД учитывает знаки
+        if (mynod != 0) {  //делим на НОД если он не ноль числитель и знаменатель (ниже)
+            Num /= mynod;
+            Den /= mynod;
+        }
+    }
+
+public:
+    // конструктор
+    Rational(int numerator = 0, int denominator = 1) : Num(numerator), Den(denominator) {
+        //если числитель не указан, он будет 0. Если знаменатель не указан, он будет 1
+        //вот это после двоеточия это мы инициализируем их до входа в тело конструктора
+        if (Den == 0) { //если знаменатель 0, то ошибка
+            cout << "Error: Denominator cannot be zero" << endl;
+            Den = 1; // чтобы на ноль не делить
+        }
+        reduce();
+    }
+
+    //перегрузим оператор сложения
+    Rational operator+(const Rational& other) const {
+        return Rational(Num * other.Den + other.Num * Den, Den * other.Den);
+        /*тут все ясно : типа числитель первой дроби умножается на знаменатель второй,
+        числитель второй дроби умножается на знаменатель первой.
+        числители складываем Den * other.Den - перемножаем знаменатели.
+        сии невъебенные числа исчезнут, когда в конструкторе мы вызовем reduce
+        */
+    }
+
+    //перегрузим оператор вычитания
+    Rational operator-(const Rational& other) const {
+        return Rational(Num * other.Den - other.Num * Den, Den * other.Den); //ну аналогично сложению
+    }
+
+    //перегрузим оператор умножения
+    Rational operator*(const Rational& other) const {
+        return Rational(Num * other.Num, Den * other.Den);
+        //перемножаем числитель с числителем, знаменатель со знаменателем
+    }
+
+    //перегрузим оператор деления
+    Rational operator/(const Rational& other) const {
+        if (other.Num == 0) { //вторая дробь переворачивается при делении, поэтому мы проверяем числитель, а не знаменатель
+            cout << "Error: Cannot divide by zero" << endl;
+            return Rational(0, 1);
+        }
+        return Rational(Num * other.Den, Den * other.Num); //перемножаем числитель на знаменатель, знаменатель на числитель
+    }
+
+    // перегрузим оператор вывода
+    friend ostream& operator<<(ostream& os, const Rational& r) {
+        os << r.Num; //выводим числитель
+        if (r.Den != 1) { //если знаменатель не единица
+            os << '/' << r.Den; //через слэш его выводим
+        }
+        return os;
+    }
+
+    //перегрузим оператор ввода
+    friend istream& operator>>(istream& is, Rational& r) {
+        //friend нужен для поступа к приватным полям
+        int num, den = 1; // num числитель, den знаменатель (по умолчанию 1)
+        //когда вводим число без знаменателя, оно идет в числитель и знаменатель по умолчанию
+        char slash;
+
+        is >> num; //считали первое число
+        if (is.peek() == '/') { //если следующий символ слэш
+            is >> slash >> den; //пропускаем его и считываем знаменатель
+        }
+
+        if (den == 0) { //если знаменатель 0
+            cerr << "Error: Denominator cannot be zero" << endl;
+            den = 1;
+        }
+
+        r = Rational(num, den); //вызвали конструктор
+        return is;
+    }
+};
+
+int main() {
+    Rational a, b;
+    char op;
+
+    cout << "Fraction calculator (a/b operation c/d)" << endl;
+    cout << "Available operations: + - * /" << endl;
+
+    cout << "Enter the first fraction (format a or a/b): ";
+    cin >> a;
+
+    cout << "Enter the operation (+, -, *, /): ";
+    cin >> op;
+
+    cout << "Enter the second fraction (format a or a/b): ";
+    cin >> b;
+
+    Rational result;
+    switch (op) {
+    case '+': result = a + b; break;
+    case '-': result = a - b; break;
+    case '*': result = a * b; break;
+    case '/': result = a / b; break;
+    default:
+        cout << "Error: undefined operation!" << endl;
+        return 1;
+    }
+
+    cout << "Result: " << a << " " << op << " " << b << " = " << result << endl;
+    return 0;
+}

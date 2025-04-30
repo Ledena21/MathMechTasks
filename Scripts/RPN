@@ -16,6 +16,10 @@ function isOperator(chunk) {
 }
 
 function InToPost(infix) {
+    if (/([a-zA-Z]\d|\d[a-zA-Z])/.test(infix.replace(/\s/g, ''))) {
+        return "ERROR: Смешаны цифры и буквы";
+    }
+
     let stack = []; //создаем стек
     let out = []; //создаем out
     let chunks = infix.replace(/\s+/g, "").split(/([()^*/+-])/).filter(chunk => chunk !== "");
@@ -25,36 +29,37 @@ function InToPost(infix) {
     // С помощью filter проверяем каждый элемент массива и возвращаем новый массив из элементов
     //для которых выполняется условие chunk !== ""
 
+    if (chunks.length === 0) {
+        return "ERROR: Пустое выражение";
+    }
+    if (isOperator(chunks[chunks.length - 1])) {
+        return "ERROR: Пропущен операнд";
+    }
+
     let lastSym = null; //здесь будем запоминать тип последнего обработанного символа, чтобы находить ошибки
 
     for (let i = 0; i < chunks.length; i++) {
-        let chunk = chunks[i]; //берем кусок
-        if (isOperator(chunk)) { //если текущий кусок оператор
-            if (lastSym === "operator") { //если предыдущий тоже был оператором, выводим ошибку
-                return "ERROR: Две операции подряд: " +chunks[i-1]+chunk;
-            }
-            lastSym = "operator"; //запоминаем, что последний символ - оператор
-        }
-        
+        let chunk = chunks[i];
+
         if ((lastSym === "operand" && chunk === "(") || //если операнд стоит перед открывающей скобкой
-            (lastSym === ")" && isOperand(chunk)) || // или операнд стоит после закрывающей скобки
-            (lastSym === "operand" && isOperand(chunk)) ||  //или два операнда подряд
-            (lastSym === ")" && chunk === "(")) { //иди закрывающая и открывающая скобка подряд
+            (lastSym === ")" && isOperand(chunk)) ||  //или после закрывающей скобки
+            (lastSym === "operand" && isOperand(chunk)) || // или два операнда идут подряд
+            (lastSym === ")" && chunk === "(")) { //или сначала закрывающая, потом открывающая скобка
             
             while (stack.length > 0 && stack[stack.length - 1] !== "(" && 
-                   priority[stack[stack.length - 1]] <= priority["*"]) { 
-                    //пока стек не пуст и последний элемент стека не открывающая скобка 
+                   priority[stack[stack.length - 1]] <= priority["*"]) {
+                //пока стек не пуст и последний элемент стека не открывающая скобка 
                     // и приоритет последнего оператора в стеке меньше или равен приоритету умножения (*).
-                out.push(stack.pop()); //выталкиваем последний элемент стека в out
+                    out.push(stack.pop()); //выталкиваем последний элемент стека в out
+                }
+                stack.push("*"); //кладем в стек умножение
+                lastSym = "operator"; //запоминаем, что последний символ - оператор
             }
-            stack.push("*"); //кладем в стек умножение
-            lastSym = "operator"; //запоминаем, что последний символ - оператор
-        }
 
-        if (isOperand(chunk)) { //если пришел операнд
+        if (isOperand(chunk)) { //если кусок операнд
             for (let j = 0; j < chunk.length; j++) {
-                out.push(chunk[j]); //добавляем символ в out
-                if (j < chunk.length - 1) { //если это не последний символ в операнде
+                out.push(chunk[j]); //добавляем операнд в out
+                if (j < chunk.length - 1) { //если в операнде несколько символов
                     while (stack.length > 0 && stack[stack.length - 1] !== "(" && 
                            priority[stack[stack.length - 1]] <= priority["*"]) {
                         //пока стек не пуст и последний элемент стека не открывающая скобка 
@@ -66,7 +71,8 @@ function InToPost(infix) {
                 }
             }
             lastSym = "operand"; //запоминаем, что последний символ - операнд
-        } 
+        }
+
         else if (chunk === "(") { //если встретили открывающую скобку
             stack.push(chunk); //положили ее в стек
             lastSym = "("; //запомнили, что последний символ - открывающая скобка
@@ -97,15 +103,16 @@ function InToPost(infix) {
         }
     }
 
-    while (stack.length > 0) { //пока стек не пуст
-        let ch = stack.pop(); //достаем кусок
-        if (ch === "(") { //если это открывающая скобка, выводим ошибку
+    // Очищаем стек в конце
+    while (stack.length > 0) {
+        let ch = stack.pop();
+        if (ch === "(") {
             return "ERROR: Не закрыта скобка";
         }
-        out.push(ch); //выталкиваем кусок в out
+        out.push(ch);
     }
 
-    return out.join(""); //склеиваем out в строку и возвращаем ее
+    return out.join("");
 }
 
 function PostToIn(postfix) {
@@ -137,7 +144,10 @@ function PostToIn(postfix) {
 }
 
 function Calculator(expr) {
-    expr = expr.replace(/\s/g, ""); //убираем из выражения все пробелы
+    if (expr.includes("ERROR:")) {
+        return expr; //просто возвращаем сообщение об ошибке
+    }
+
     let balance = 0; //тут посчитаем количество скобок
     for (let char of expr) {
       if (char === "(") balance++; //если нашли открывающую скобку, увеличиваем счетчик
@@ -153,7 +163,7 @@ function Calculator(expr) {
     if (isFinite(result)){ //если результат - конечное значение, а не NuN, Unfinity и прочее
         return result; //то возвращаем результат
     } else { //иначе выводим ошибку
-        console.log("ERROR: Расчет не выполнен");
+        return "ERROR: Расчет не выполнен";
     }
   }
 
@@ -166,15 +176,17 @@ switch (args[0]) {
         console.log("Convert postfix to infix: node rpn.js --post2in \"expression\"");
         break;
     case "--in2post":
-        console.log(InToPost(args[1]));
-        if (/^[\d()+*\/\-.]*$/.test(args[1])==true){
-            console.log("Result: "+Calculator(args[1]));
+        let inf = args[1].replace(/\s/g, "");
+        console.log(InToPost(inf));
+        if (InToPost(inf).includes("ERROR:")===false && /^[\d()+*\/\-.]*$/.test(inf)==true){
+            console.log("Result: "+Calculator(PostToIn(InToPost(inf))));
         }
         break;
     case "--post2in":
-        console.log(PostToIn(args[1]));
-        if (/^[\d()+*\/\-.]*$/.test(PostToIn(args[1]))==true){
-            console.log("Result: "+Calculator(PostToIn(args[1])));
+        let postf = args[1].replace(/\s/g, "");
+        console.log(PostToIn(postf));
+        if (PostToIn(postf).includes("ERROR:")===false && /^[\d()+*\/\-.]*$/.test(PostToIn(postf))==true){
+            console.log("Result: "+Calculator(PostToIn(postf)));
         }
         break;
     default:

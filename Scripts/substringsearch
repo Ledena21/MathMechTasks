@@ -1,0 +1,213 @@
+function measureTime() {
+    const start = process.hrtime.bigint();
+    return {
+        end: () => {
+            const end = process.hrtime.bigint();
+            return Number(end - start) / 1000000;
+        }
+    };
+}
+
+function BruteForce(text, pattern) {
+    const timer = measureTime();
+    const n = text.length;
+    const m = pattern.length;
+    const matching = [];
+    let SymbolComparing = 0;
+    
+    for (let i = 0; i <= n - m; i++) {
+        let j;
+        for (j = 0; j < m; j++) {
+            SymbolComparing++;
+            if (text[i + j] !== pattern[j]) break;
+        }
+        if (j === m) matching.push(i);
+    }
+    
+    return {
+        time: timer.end().toFixed(4) + " ms",
+        matching: matching.length,
+        top10: matching.slice(0, 10),
+        collisious: null,
+        SymbolComparing: SymbolComparing
+    };
+}
+
+function HashSum(text, pattern) {
+    const timer = measureTime();
+    const M = 997;
+    const n = text.length;
+    const m = pattern.length;
+    const matching = [];
+    let collisions = 0;
+    let SymbolComparing = 0;
+
+    let patternHash = 0;
+    for (let i = 0; i < m; i++) {
+        patternHash = (patternHash + pattern.charCodeAt(i)) % M;
+    }
+
+    let windowHash = 0;
+    for (let i = 0; i < m; i++) {
+        windowHash = (windowHash + text.charCodeAt(i)) % M;
+    }
+
+    for (let i = 0; i <= n - m; i++) {
+        if (windowHash === patternHash) {
+            let match = true;
+            for (let j = 0; j < m; j++) {
+                SymbolComparing++;
+                if (text[i + j] !== pattern[j]) {
+                    match = false;
+                    collisions++;
+                    break;
+                }
+            }
+            if (match) {
+                matching.push(i);
+            }
+        }
+        if (i < n - m) {
+            windowHash = (windowHash - text.charCodeAt(i) + text.charCodeAt(i + m)) % M;
+            if (windowHash < 0) windowHash += M;
+        }
+    }
+
+    return {
+        time: timer.end().toFixed(4) + " ms",
+        matching: matching.length,
+        top10: matching.slice(0, 10),
+        collisious: collisions || null,
+        SymbolComparing: SymbolComparing
+    };
+}
+
+function hashRabinKarp(text, pattern) {
+    const timer = measureTime();
+    const M = 997;
+    const n = text.length;
+    const m = pattern.length;
+    const matching = [];
+    let collisions = 0;
+    let SymbolComparing = 0;
+    let power = 1;
+
+    for (let i = 0; i < m - 1; i++) {
+        power = (power * 2) % M;
+    }
+
+    let patternHash = 0;
+    for (let i = 0; i < m; i++) {
+        patternHash = (patternHash * 2 + pattern.charCodeAt(i)) % M;
+    }
+
+    let windowHash = 0;
+    for (let i = 0; i < m; i++) {
+        windowHash = (windowHash * 2 + text.charCodeAt(i)) % M;
+    }
+
+    for (let i = 0; i <= n - m; i++) {
+        if (windowHash === patternHash) {
+            let match = true;
+            for (let j = 0; j < m; j++) {
+                SymbolComparing++;
+                if (text[i + j] !== pattern[j]) {
+                    match = false;
+                    collisions++;
+                    break;
+                }
+            }
+            if (match) {
+                matching.push(i);
+            }
+        }
+
+        if (i < n - m) {
+            windowHash = (windowHash - text.charCodeAt(i) * power) % M;
+            windowHash = (windowHash * 2 + text.charCodeAt(i + m)) % M;
+            if (windowHash < 0) windowHash += M;
+        }
+    }
+
+    return {
+        time: timer.end().toFixed(4) + " ms",
+        matching: matching.length,
+        top10: matching.slice(0, 10),
+        collisious: collisions || null,
+        SymbolComparing: SymbolComparing
+    };
+}
+
+function authomaton(text, pattern) {
+    const timer = measureTime();
+    const m = pattern.length;
+    const alphabet = [...new Set(pattern)];
+    const matches = [];
+    let symbolComparing = 0;
+    const transitionTable = Array(m + 1).fill().map(() => ({}));
+    
+    for (let state = 0; state <= m; state++) {
+        for (let char of alphabet) {
+            let nextState = Math.min(state + 1, m);
+            while (nextState > 0) {
+                if (char === pattern[nextState - 1]) {
+                    let match = true;
+                    for (let i = 0; i < nextState - 1; i++) {
+                        if (pattern[i] !== pattern[state - nextState + 1 + i]) {
+                            match = false;
+                            break;
+                        }
+                    }
+                    if (match) break;
+                }
+                nextState--;
+            }
+            
+            transitionTable[state][char] = nextState;
+        }
+    }
+
+    let currentState = 0;
+    for (let i = 0; i < text.length; i++) {
+        let char = text[i];
+        symbolComparing++;
+        currentState = transitionTable[currentState][char] || 0;
+        if (currentState === m) {
+            matches.push(i - m + 1);
+        }
+    }
+    
+    return {
+        time: timer.end().toFixed(4) + " ms",
+        matching: matches.length,
+        top10: matches.slice(0, 10),
+        collisious: null,
+        symbolComparing: symbolComparing
+    };
+}
+
+let text = "abracadababra";
+let pattern = "abra";
+
+let args = process.argv.slice(2);
+
+switch (args[0]) {
+    case "--bf":
+    case "--bruteforce":
+        console.log(BruteForce(text, pattern));
+        break;
+    case "--hs":
+    case "--hashsum":
+        console.log(HashSum(text, pattern));
+        break;
+    case "--hrk":
+    case "--hashRabinKarp":
+        console.log(hashRabinKarp(text, pattern));
+        break;
+    case "--authomaton":
+    case "--automaton":
+        console.log(authomaton(text, pattern));
+        break;
+    default:
+        console.log("Invalid option. Use -h for help.");
+}

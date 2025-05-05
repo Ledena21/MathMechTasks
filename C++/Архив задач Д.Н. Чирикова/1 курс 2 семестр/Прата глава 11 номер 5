@@ -1,0 +1,135 @@
+//main.cpp
+
+#include <iostream>
+#include "stonewt.h"
+using namespace std;
+
+int main() {
+    Stonewt st1(10, 8);
+    Stonewt st2(154);
+    Stonewt st3;
+
+    cout << "st1: " << st1 << endl;
+    cout << "st2: " << st2 << endl;
+    cout << "st3: " << st3 << endl;
+
+    st1.set_pound_int_mode();
+    st2.set_pound_dbl_mode();
+    st3.set_stone_mode();
+
+    cout << "\nAfter changing modes:\n";
+    cout << "st1: " << st1 << endl;
+    cout << "st2: " << st2 << endl;
+    cout << "st3: " << st3 << endl;
+
+    Stonewt st4 = st1 + st2;
+    Stonewt st5 = st1 - st2;
+    Stonewt st6 = st1 * 2.5;
+    Stonewt st7 = 3.0 * st2;
+
+    cout << "\nTesting operators:\n";
+    cout << "st1 + st2: " << st4 << endl;
+    cout << "st1 - st2: " << st5 << endl;
+    cout << "st1 * 2.5: " << st6 << endl;
+    cout << "3.0 * st2: " << st7 << endl;
+
+    return 0;
+}
+
+
+//stonewt.h
+
+#ifndef STONEWT_H
+#define STONEWT_H
+
+#include <iostream>
+
+class Stonewt
+{
+public:
+    enum Mode { STONE, POUND_INT, POUND_DBL };
+
+private:
+    enum { Lbs_per_stn = 14 }; //фунтов на стоне
+    int stone; //полных стоунов
+    double pds_left; //дробное число фунтов
+    double pounds; //общий вес в фунтах
+    Mode mode; //текущий режим отображения
+
+public:
+    Stonewt(double lbs, Mode form = POUND_DBL);
+    Stonewt(int stn, double lbs, Mode form = STONE);
+    Stonewt();
+    ~Stonewt();
+
+    void set_stone_mode() { mode = STONE; }
+    void set_pound_int_mode() { mode = POUND_INT; }
+    void set_pound_dbl_mode() { mode = POUND_DBL; }
+
+    Stonewt operator+(const Stonewt& st) const;
+    Stonewt operator-(const Stonewt& st) const;
+    Stonewt operator*(double n) const;
+
+    friend Stonewt operator*(double n, const Stonewt& st) { return st * n; }
+    friend std::ostream& operator<<(std::ostream& os, const Stonewt& st);
+};
+
+#endif
+
+
+//stonewt.cpp
+
+#include <iostream>
+#include "stonewt.h"
+
+using std::cout;
+
+Stonewt::Stonewt(double lbs, Mode form) {
+    stone = int(lbs) / Lbs_per_stn;
+    pds_left = int(lbs) % Lbs_per_stn + lbs - int(lbs);
+    pounds = lbs;
+    mode = form;
+}
+
+Stonewt::Stonewt(int stn, double lbs, Mode form) {
+    stone = stn;
+    pds_left = lbs;
+    pounds = stn * Lbs_per_stn + lbs;
+    mode = form;
+}
+
+Stonewt::Stonewt() {
+    stone = pounds = pds_left = 0;
+    mode = STONE;
+}
+
+Stonewt::~Stonewt() {
+}
+
+Stonewt Stonewt::operator+(const Stonewt& st) const {
+    return Stonewt(pounds + st.pounds);
+}
+
+Stonewt Stonewt::operator-(const Stonewt& st) const {
+    return Stonewt(pounds - st.pounds);
+}
+
+Stonewt Stonewt::operator*(double n) const {
+    return Stonewt(pounds * n);
+}
+
+std::ostream& operator<<(std::ostream& os, const Stonewt& st) {
+    switch (st.mode)
+    {
+    case Stonewt::STONE:
+        os << st.stone << " stone, " << st.pds_left << " pounds";
+        break;
+    case Stonewt::POUND_INT:
+        os << int(st.pounds) << " pounds";
+        break;
+    case Stonewt::POUND_DBL:
+        os << st.pounds << " pounds";
+        break;
+    }
+    return os;
+}

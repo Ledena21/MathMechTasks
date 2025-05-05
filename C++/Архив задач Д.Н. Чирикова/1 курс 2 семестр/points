@@ -1,0 +1,182 @@
+//main.cpp
+
+#include <iostream>
+#include "points.h"
+using namespace std;
+
+int main() {
+    double R;
+
+    int totalPoints = PointProcessor::countPointsInFile();
+    if (totalPoints <= 0) {
+        cout << "Error of reading file!" << endl;
+        return 1;
+    }
+
+    Point* allPoints = new Point[totalPoints];
+    PointProcessor::readPoints(allPoints, totalPoints, R);
+
+    Point* filteredPoints = nullptr;
+    int filteredCount = 0;
+    PointProcessor::filterPoints(allPoints, totalPoints, filteredPoints, filteredCount, R);
+
+    cout << "Points in the R-neighborhood (R = " << R << "):\n";
+    for (int i = 0; i < filteredCount; i++) {
+        filteredPoints[i].print();
+    }
+
+    Point p1, p2;
+    PointProcessor::findFurthestPair(filteredPoints, filteredCount, p1, p2);
+
+    cout << "\nThe most distant points:\n";
+    p1.print();
+    p2.print();
+    cout << "Distance between them: " << p1.distanceTo(p2) << endl;
+
+    delete[] allPoints;
+    delete[] filteredPoints;
+
+    return 0;
+}
+
+
+//point.h
+
+#ifndef POINTS_H
+#define POINTS_H
+
+class Point {
+public:
+    int number;
+    double x, y, z;
+
+    Point();
+    Point(int num, double x_val, double y_val, double z_val);
+    double distanceToOrigin();
+    double distanceTo(Point other);
+    bool isInROfOrigin(double R);
+    void print();
+};
+
+class PointProcessor {
+public:
+    static int countPointsInFile();
+    static void readPoints(Point* points, int count, double& R);
+    static void filterPoints(Point* allPoints, int allCount, Point*& filteredPoints, int& filteredCount, double R);
+    static void findFurthestPair(Point* points, int count, Point& p1, Point& p2);
+};
+
+#endif // POINTS_H
+
+
+//points.cpp
+
+#include "points.h"
+#include <iostream>
+#include <fstream>
+#include <cmath>
+#include <string>
+
+Point::Point() : number(0), x(0), y(0), z(0) {}
+Point::Point(int num, double x_val, double y_val, double z_val)
+    : number(num), x(x_val), y(y_val), z(z_val) {}
+
+double Point::distanceToOrigin() {
+    return sqrt(x * x + y * y + z * z);
+}
+
+double Point::distanceTo(Point other) {
+    double dx = x - other.x;
+    double dy = y - other.y;
+    double dz = z - other.z;
+    return sqrt(dx * dx + dy * dy + dz * dz);
+}
+
+bool Point::isInROfOrigin(double R) {
+    return distanceToOrigin() <= R;
+}
+
+void Point::print() {
+    std::cout << number << "\t" << x << "\t" << y << "\t" << z << std::endl;
+}
+
+int PointProcessor::countPointsInFile() {
+    std::ifstream file("points.txt");
+    if (!file.is_open()) {
+        return -1;
+    }
+
+    std::string line;
+    std::getline(file, line); // строка с R
+    std::getline(file, line); // заголовок
+
+    int count = 0;
+    while (std::getline(file, line)) {
+        count++;
+    }
+    file.close();
+    return count;
+}
+
+void PointProcessor::readPoints(Point* points, int count, double& R) {
+    std::ifstream file("points.txt");
+    if (!file.is_open()) {
+        std::cout << "Error of file opening!" << std::endl;
+        return;
+    }
+
+    std::string line;
+    std::getline(file, line);
+    size_t eqPos = line.find('=');
+    R = std::stod(line.substr(eqPos + 1));
+
+    std::getline(file, line);
+
+    int num;
+    double x, y, z;
+    for (int i = 0; i < count; i++) {
+        file >> num >> x >> y >> z;
+        points[i] = Point(num, x, y, z);
+    }
+    file.close();
+}
+
+void PointProcessor::filterPoints(Point* allPoints, int allCount, Point*& filteredPoints, int& filteredCount, double R) {
+    filteredCount = 0;
+    for (int i = 0; i < allCount; i++) {
+        if (allPoints[i].isInROfOrigin(R)) {
+            filteredCount++;
+        }
+    }
+
+    filteredPoints = new Point[filteredCount];
+
+    int index = 0;
+    for (int i = 0; i < allCount; i++) {
+        if (allPoints[i].isInROfOrigin(R)) {
+            filteredPoints[index++] = allPoints[i];
+        }
+    }
+}
+
+void PointProcessor::findFurthestPair(Point* points, int count, Point& p1, Point& p2) {
+    if (count < 2) {
+        std::cout << "Not enough points!" << std::endl;
+        return;
+    }
+
+    double maxDistance = 0;
+    p1 = points[0];
+    p2 = points[1];
+
+    for (int i = 0; i < count; i++) {
+        for (int j = i + 1; j < count; j++) {
+            double dist = points[i].distanceTo(points[j]);
+            if (dist > maxDistance) {
+                maxDistance = dist;
+                p1 = points[i];
+                p2 = points[j];
+            }
+        }
+    }
+}

@@ -1,0 +1,170 @@
+//main.cpp
+
+#include "port.h"
+#include <iostream>
+using namespace std;
+
+int main() {
+    Port p1("Gallo", "tawny", 20);
+    Port p2 = p1;
+    p1.Show();
+    cout << p2 << endl;
+
+    p1 += 5;
+    p1 -= 3;
+    cout << "After operations: " << p1 << endl;
+
+    VintagePort vp1("Dow's", 10, "The Noble", 1994);
+    VintagePort vp2 = vp1;
+    vp1.Show();
+    cout << vp2 << endl;
+
+    VintagePort vp3;
+    vp3 = vp1;
+    cout << vp3 << endl;
+
+    return 0;
+}
+
+
+//port.h
+
+#pragma once
+#ifndef PORT_H
+#define PORT_H
+
+#include <iostream>
+using namespace std;
+
+class Port { //базовый класс для хранения информации о портвейне
+private:
+    char* brand; //бренд
+    char style[20]; //тип вина
+    int bottles; //кол-во бутылок
+public:
+    Port(const char* br = "none", const char* st = "none", int b = 0);
+    Port(const Port& p); //конструктор
+    virtual ~Port() { 
+        delete[] brand; 
+    } //деструктор
+    Port& operator=(const Port& p); //присваивание
+    Port& operator+=(int b); //добавляем бутылки
+    Port& operator-=(int b); //убираем бутылки
+    int BottleCount() const { 
+        return bottles; //считаем бутылки
+    }
+    virtual void Show() const; //вывод
+    friend ostream& operator<<(ostream& os, const Port& p); //вывод-перегрузка
+};
+
+class VintagePort : public Port { //класс для марочного портвейна с дополнительными атрибутами
+private:
+    char* nickname; //название вина
+    int year; //год когда бутылку поставили настаиваться
+public:
+    VintagePort(); //конструктор по умолчанию
+    VintagePort(const char* br, int b, const char* nn, int y); //основной конструктор
+    VintagePort(const VintagePort& vp); //конструктор копирования
+    ~VintagePort() { 
+        delete[] nickname; //деструктор
+    }
+    VintagePort& operator=(const VintagePort& vp); //копирует данные из vp в текущий объект
+    //копирует поля brand, style, bottles).
+    void Show() const; //вывод
+    friend ostream& operator<<(ostream& os, const VintagePort& vp); //перегрузка вывода
+};
+
+#endif
+
+
+//port.cpp
+
+#include "port.h"
+#include <cstring>
+
+Port::Port(const char* br, const char* st, int b) {
+    brand = new char[strlen(br) + 1]; //выделяем память под бренд, это динамический массив символов
+    strcpy_s(brand, strlen(br) + 1, br); //копируем строку
+    strncpy_s(style, st, 19); //копируем тип
+    bottles = b; //записываем бутылки
+}
+
+Port::Port(const Port& p) {
+    brand = new char[strlen(p.brand) + 1];
+    strcpy_s(brand, strlen(p.brand) + 1, p.brand);
+    strcpy_s(style, p.style);
+    bottles = p.bottles;
+}
+
+Port& Port::operator=(const Port& p) {
+    if (this != &p) {
+        delete[] brand;
+        brand = new char[strlen(p.brand) + 1];
+        strcpy_s(brand, strlen(p.brand) + 1, p.brand);
+        strcpy_s(style, p.style);
+        bottles = p.bottles;
+    }
+    return *this;
+}
+
+Port& Port::operator+=(int b) {
+    bottles += b;
+    return *this;
+}
+
+Port& Port::operator-=(int b) {
+    if (bottles >= b) {
+        bottles -= b;
+    }
+    return *this;
+}
+
+void Port::Show() const {
+    cout << "Brand: " << brand << endl;
+    cout << "Kind: " << style << endl;
+    cout << "Bottles: " << bottles << endl;
+}
+
+ostream& operator<<(ostream& os, const Port& p) {
+    os << p.brand << ", " << p.style << ", " << p.bottles;
+    return os;
+}
+
+VintagePort::VintagePort() : Port("none", "vintage", 0), year(0) {
+    nickname = new char[1];
+    nickname[0] = '\0';
+}
+
+VintagePort::VintagePort(const char* br, int b, const char* nn, int y)
+    : Port(br, "vintage", b), year(y) {
+    nickname = new char[strlen(nn) + 1];
+    strcpy_s(nickname, strlen(nn) + 1, nn);
+}
+
+VintagePort::VintagePort(const VintagePort& vp) : Port(vp) {
+    nickname = new char[strlen(vp.nickname) + 1];
+    strcpy_s(nickname, strlen(vp.nickname) + 1, vp.nickname);
+    year = vp.year;
+}
+
+VintagePort& VintagePort::operator=(const VintagePort& vp) {
+    if (this != &vp) {
+        Port::operator=(vp);
+        delete[] nickname;
+        nickname = new char[strlen(vp.nickname) + 1];
+        strcpy_s(nickname, strlen(vp.nickname) + 1, vp.nickname);
+        year = vp.year;
+    }
+    return *this;
+}
+
+void VintagePort::Show() const {
+    Port::Show();
+    cout << "Nickname: " << nickname << endl;
+    cout << "Year: " << year << endl;
+}
+
+ostream& operator<<(ostream& os, const VintagePort& vp) {
+    os << (const Port&)vp << ", " << vp.nickname << ", " << vp.year;
+    return os;
+}

@@ -5,10 +5,10 @@
 using namespace std;
 
 int main() {
-    Point* Points = nullptr;
+    Point* Points = nullptr; // создаем указатель на массив точек nullptr, чтобы не обратиться к неинициализированной памяти
     int pointCount = 0;
-    double R = 0;
-    Point point;
+    double R = 0; 
+    Point point; //создаем объект point класса Point, чтобы вызывать его методы
 
     point.read("points.txt", Points, pointCount, R); //читаем файл
 
@@ -18,7 +18,7 @@ int main() {
         filterPoints[i] = Points[i]; //туда копируем отфильтрованные точки
     }
     delete[] Points; //удаляем старый массив
-    Points = nullptr;
+    Points = nullptr; //присваиваем Points значение nullptr для безопасности, чтобы не использовать удаленный указатель
 
     int num1 = -1, num2 = -1;
     double maxDistance = 0;
@@ -38,6 +38,7 @@ int main() {
     delete[] filterPoints; //удаляем массив с отфильтрованными точками
     return 0;
 }
+
 
 //point.h
 
@@ -99,9 +100,10 @@ void Point::read(const std::string& filename, Point*& points, int& count, double
         return;
     }
 
-    file.ignore(std::numeric_limits<std::streamsize>::max(), '=');
-    file >> R;
-    file.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    std::string rline; //строчка с R
+    std::getline(file, rline);  //читаем строку
+    int equal = rline.find("="); //находим позицию равно
+    R = stod(rline.substr(equal + 1)); //от равно и дальше берем число 
 
     count = 0;
     std::string line;
@@ -147,6 +149,12 @@ void Point::distantPoints(const Point* points, int size, int& num1, int& num2, d
             double dist = points[i].distance(points[j]); //растояние между ними
             if (dist > maxDist) { //если оно больше максимума
                 maxDist = dist; //обновляем его
+                num1 = points[i].number; //запоминаем номера точек
+                num2 = points[j].number;
+            }
+        }
+    }
+}
                 num1 = points[i].number; //запоминаем номера точек
                 num2 = points[j].number;
             }

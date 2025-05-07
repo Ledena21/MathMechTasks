@@ -10,32 +10,34 @@ int main() {
     double R = 0;
     Point point;
 
-    point.readFromFile("points.txt", Points, pointCount, R);
+    point.read("points.txt", Points, pointCount, R); //читаем файл
 
-    int filteredCount = point.filter(Points, pointCount, R);
-
-    int index1, index2;
-    double maxDistance;
-    point.findFurthestPoints(Points, filteredCount, index1, index2, maxDistance);
-
-    cout << "Points in R-neighborhood (R = " << R << "): " << filteredCount << std::endl;
-    for (int i = 0; i < filteredCount; i++) {
-        Points[i].show();
+    int filterCount = point.filter(Points, pointCount, R); //сортируем массив и получаем его длину
+    Point* filterPoints = new Point[filterCount]; //создаем новый массив с отфильтрованными точками
+    for (int i = 0; i < filterCount; i++) {
+        filterPoints[i] = Points[i]; //туда копируем отфильтрованные точки
     }
+    delete[] Points; //удаляем старый массив
+    Points = nullptr;
 
-    if (filteredCount >= 2) {
-        cout << "Two furthest points: " << index1 << " and " << index2 << endl;
+    int num1 = -1, num2 = -1;
+    double maxDistance = 0;
+    point.distantPoints(filterPoints, filterCount, num1, num2, maxDistance); //находим наиболее удаленные точки
+
+    cout << "Points in R-neighborhood (R = " << R << "): " << filterCount << endl;
+    for (int i = 0; i < filterCount; i++) {
+        filterPoints[i].show();
+    }
+    if (filterCount >= 2) {
+        cout << "Two furthest points: " << num1 << " and " << num2 << endl;
         cout << "Distance between them: " << maxDistance << endl;
     }
     else {
         cout << "Not enough points in R-neighborhood to find a pair." << endl;
     }
-
-    delete[] Points;
-
+    delete[] filterPoints; //удаляем массив с отфильтрованными точками
     return 0;
 }
-
 
 //point.h
 
@@ -53,16 +55,16 @@ private:
 
 public:
     Point();
-    Point(int num, double x_val, double y_val, double z_val);
+    Point(int num, double xx, double yy, double zz);
 
     double distanceToOrigin() const;
-    double distanceTo(const Point& other) const;
+    double distance(const Point& other) const;
 
-    void readFromFile(const std::string& filename, Point*& points, int& count, double& R);
+    void read(const std::string& filename, Point*& points, int& count, double& R);
     void show() const;
 
     int filter(Point* arr, int lenarray, double R) const;
-    void findFurthestPoints(const Point* points, int size, int& index1, int& index2, double& maxDist) const;
+    void distantPoints(const Point* points, int size, int& index1, int& index2, double& maxDist) const;
 };
 
 #endif
@@ -71,29 +73,28 @@ public:
 //points.cpp
 
 #include "points.h"
-#include <sstream>
 #include <iostream>
-#include <limits>
+#include <fstream>
 
-Point::Point() : number(0), x(0), y(0), z(0) {}
+Point::Point() : number(0), x(0), y(0), z(0) {}//по умолчанию пусть все кооординаты и номер - нули
 
 Point::Point(int num, double xx, double yy, double zz)
-    : number(num), x(xx), y(yy), z(zz) {}
+    : number(num), x(xx), y(yy), z(zz) {} //заполняем поля объекта данными
 
 double Point::distanceToOrigin() const {
-    return sqrt(x * x + y * y + z * z);
+    return sqrt(x * x + y * y + z * z);//ищем расстояние до начала координат
 }
 
-double Point::distanceTo(const Point& other) const {
+double Point::distance(const Point& other) const {
     double dx = x - other.x;
     double dy = y - other.y;
     double dz = z - other.z;
-    return sqrt(dx * dx + dy * dy + dz * dz);
+    return sqrt(dx * dx + dy * dy + dz * dz); //находим расстояние до другой точки
 }
 
-void Point::readFromFile(const std::string& filename, Point*& points, int& count, double& R) {
-    std::ifstream file(filename);
-    if (!file.is_open()) {
+void Point::read(const std::string& filename, Point*& points, int& count, double& R) {
+    std::ifstream file(filename); //открыли файл
+    if (!file.is_open()) { //не открывается, значит ошибка
         std::cout << "Error opening file: " << filename << std::endl;
         return;
     }
@@ -102,58 +103,51 @@ void Point::readFromFile(const std::string& filename, Point*& points, int& count
     file >> R;
     file.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 
-    std::string header;
-    std::getline(file, header);
-
     count = 0;
     std::string line;
-    while (std::getline(file, line)) {
-        if (!line.empty()) {
-            count++;
+    std::getline(file, line); //глотаем заголовок
+    while (std::getline(file, line)) { //идем по строкам файла
+        if (!line.empty()) { //если в них что-то есть
+            count++; //считаем их
         }
     }
 
-    file.clear();
-    file.seekg(0);
-    file.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-    std::getline(file, header);
+    file.clear(); //чистим флаги, чтобы можно было снова открыть файл
+    file.seekg(0); //переходим снова в начало файла
+    std::getline(file, line); //пропускаем R
+    std::getline(file, line); //пропускаем заголовок
 
-    points = new Point[count];
+    points = new Point[count]; //создаем массив длиной во столько точек, сколько насчитали
     int num;
     double x, y, z;
     for (int i = 0; i < count && file >> num >> x >> y >> z; i++) {
-        points[i] = Point(num, x, y, z);
+        points[i] = Point(num, x, y, z); //собираем массив из объектов Point
     }
-
-    file.close();
+    file.close(); //закрываем файл
 }
 
 void Point::show() const {
-    std::cout << number << "\t" << x << "\t" << y << "\t" << z << std::endl;
+    std::cout << number << "\t" << x << "\t" << y << "\t" << z << std::endl; //просто вывод через таб
 }
 
 int Point::filter(Point* arr, int lenarray, double R) const {
-    int newSize = 0;
+    int filterCount = 0; //новый размер массива
     for (int i = 0; i < lenarray; i++) {
-        if (arr[i].distanceToOrigin() <= R) {
-            arr[newSize] = arr[i];
-            newSize++;
+        if (arr[i].distanceToOrigin() <= R) { //если расстояние до начала координат меньше радиуса
+            arr[filterCount] = arr[i]; //то точка подходит, копируем ее в начало массива
+            filterCount++; //и считаем ее
         }
     }
-    return newSize;
+    return filterCount; //возвращаем количество точек
 }
 
-void Point::findFurthestPoints(const Point* points, int size, int& num1, int& num2, double& maxDist) const {
-    maxDist = 0;
-    num1 = -1;
-    num2 = -1;
-
-    for (int i = 0; i < size; i++) {
-        for (int j = i + 1; j < size; j++) {
-            double dist = points[i].distanceTo(points[j]);
-            if (dist > maxDist) {
-                maxDist = dist;
-                num1 = points[i].number;
+void Point::distantPoints(const Point* points, int size, int& num1, int& num2, double& maxDist) const {
+    for (int i = 0; i < size; i++) { //перебираем i-тые точки
+        for (int j = i + 1; j < size; j++) { //перебираем j-тые точки
+            double dist = points[i].distance(points[j]); //растояние между ними
+            if (dist > maxDist) { //если оно больше максимума
+                maxDist = dist; //обновляем его
+                num1 = points[i].number; //запоминаем номера точек
                 num2 = points[j].number;
             }
         }

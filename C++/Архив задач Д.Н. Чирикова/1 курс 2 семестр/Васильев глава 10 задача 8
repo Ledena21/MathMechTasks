@@ -1,161 +1,173 @@
+//main.cpp
+
+#include "qexpression.h"
 #include <iostream>
-
 using namespace std;
-
-//класс для представления выражения вида Q(x) = a0 + a1/x + a2/x^2 + ... + an/x^n
-class QExpression {
-private:
-    double* coeffs; //указатель на динамический массив коэффициентов (a0, a1, ..., an)
-    int n;         //количество коэффициентов (равно максимальной степени + 1)
-
-public:
-    //конструктор класса
-    //принимает размер массива коэффициентов
-    QExpression(int size) : n(size) {
-        coeffs = new double[n]; //выделяем памяти под массив коэффициентов
-        for (int i = 0; i < n; i++) coeffs[i] = 0; //инициализируем все коэффициенты нулями
-    }
-
-    //конструктор копирования
-    QExpression(const QExpression& other) : n(other.n) {
-        coeffs = new double[n]; //выделяем новую память
-        for (int i = 0; i < n; i++) {
-            coeffs[i] = other.coeffs[i]; //поэлементно копируем коэффициенты
-        }
-    }
-
-    //деструктор класса
-    ~QExpression() {
-        delete[] coeffs;
-    }
-
-    void input() {
-        cout << "Enter " << n << " coefficients (from a0 to a" << n - 1 << "): ";
-        for (int i = 0; i < n; i++) {
-            cin >> coeffs[i]; //ввод каждого коэффициента
-        }
-    }
-
-    //метод для вычисления значения выражения в точке x
-    double calc(double x) {
-        double res = 0; //результат
-        double x_pow = 1; // x^0 = 1 (начальное значение степени x)
-
-        for (int i = 0; i < n; i++) {
-            res += coeffs[i] / x_pow;//добавляем очередной член ряда
-            x_pow *= x;//увеличение степени x 
-        }
-        return res;
-    }
-
-    // Перегрузка оператора сложения (+) для двух QExpression
-    QExpression operator+(const QExpression& other) {
-        //определяем максимальный размер из двух выражений
-        int max_n = n > other.n ? n : other.n;
-        QExpression res(max_n); //создаем результат максимального размера
-        //поэлементно складываем коэффициенты
-        for (int i = 0; i < max_n; i++) {
-            //если коэффициент отсутствует в одном из выражений, считаем его равным 0
-            double a = i < n ? coeffs[i] : 0;
-            double b = i < other.n ? other.coeffs[i] : 0;
-            res.coeffs[i] = a + b;
-        }
-        return res;
-    }
-
-    // Перегрузка оператора вычитания (-) аналогична сложению
-    QExpression operator-(const QExpression& other) {
-        int max_n = n > other.n ? n : other.n;
-        QExpression res(max_n);
-
-        for (int i = 0; i < max_n; i++) {
-            double a = i < n ? coeffs[i] : 0;
-            double b = i < other.n ? other.coeffs[i] : 0;
-            res.coeffs[i] = a - b;
-        }
-        return res;
-    }
-
-    //перегрузка оператора умножения (*) на число
-    QExpression operator*(double num) {
-        QExpression res(n); //создаем результат того же размера
-        for (int i = 0; i < n; i++)
-            res.coeffs[i] = coeffs[i] * num; //умножаем каждый коэффициент на число
-        return res;
-    }
-
-    //перегрузка оператора деления (/) на число
-    QExpression operator/(double num) {
-        if (num == 0) {
-            cerr << "Error: Division by zero!" << endl; //проверка деления на ноль
-            return *this; //в случае ошибки возвращаем исходный объект
-        }
-        QExpression res(n); //создаем результат того же размера
-        for (int i = 0; i < n; i++)
-            res.coeffs[i] = coeffs[i] / num; //делим каждый коэффициент на число
-        return res;
-    }
-
-    void show() {
-        cout << "Q(x) = ";
-        for (int i = 0; i < n; i++) {
-            if (i == 0)
-                cout << coeffs[i]; //первый член без x
-            else
-                cout << " + " << coeffs[i] << "/x^" << i; //остальные члены с x в степени
-        }
-        cout << endl;
-    }
-};
 
 int main() {
     int N;
-    cout << "Enter max deg N: ";
-    cin >> N; //ввод максимальной степени
-    N++;      //увеличиваем на 1, так как есть еще a0
+    cout << "Enter max degree N: ";
+    cin >> N;
+    N++;
 
-    //создаем два выражения
     QExpression q1(N), q2(N);
 
-    //ввод коэффициентов для первого выражения
-    cout << "For 1 expression:\n";
-    q1.input();
+    cout << "For 1st expression:\n";
+    cin >> q1;
 
-    //ввод коэффициентов для второго выражения
-    cout << "For 2 expression:\n";
-    q2.input();
+    cout << "For 2nd expression:\n";
+    cin >> q2;
 
-    //что ввели, то выведем
-    cout << "\nExpression 1: "; q1.show();
-    cout << "Expression 2: "; q2.show();
+    cout << "\nExpression 1: " << q1 << endl;
+    cout << "Expression 2: " << q2 << endl;
 
-    //сложение
     QExpression q3 = q1 + q2;
-    cout << "Sum: "; q3.show();
+    cout << "Sum: " << q3 << endl;
 
-    //вычитание
     QExpression q4 = q1 - q2;
-    cout << "Difference: "; q4.show();
+    cout << "Difference: " << q4 << endl;
 
-    //умножение
     double mult_num;
     cout << "\nEnter number for multiplication: ";
     cin >> mult_num;
     QExpression q5 = q1 * mult_num;
-    cout << "Multiplication by " << mult_num << ": "; q5.show();
+    cout << "Multiplication by " << mult_num << ": " << q5 << endl;
 
-    //деление
     double div_num;
     cout << "Enter number for division: ";
     cin >> div_num;
     QExpression q6 = q2 / div_num;
-    cout << "Division by " << div_num << ": "; q6.show();
+    cout << "Division by " << div_num << ": " << q6 << endl;
 
-    //значение первого выражения в точке x
     double x;
     cout << "\nEnter x to calculate Q1(x): ";
     cin >> x;
     cout << "Q1(" << x << ") = " << q1.calc(x) << endl;
 
     return 0;
+}
+
+
+//qexpression.h
+
+#ifndef QEXPRESSION_H
+#define QEXPRESSION_H
+
+#include <iostream>
+
+class QExpression {
+private:
+    double* coeffs;
+    int n;
+
+public:
+    QExpression(int size);
+    QExpression(const QExpression& other);
+    ~QExpression();
+
+    double calc(double x);
+
+    QExpression operator+(const QExpression& other);
+    QExpression operator-(const QExpression& other);
+    QExpression operator*(double num);
+    QExpression operator/(double num);
+
+    friend std::ostream& operator<<(std::ostream& os, const QExpression& q);
+    friend std::istream& operator>>(std::istream& is, QExpression& q);
+};
+
+#endif // QEXPRESSION_H
+
+
+//qexpressions.cpp
+
+#include "qexpression.h"
+#include <iostream>
+
+QExpression::QExpression(int size) : n(size) {
+    coeffs = new double[n];
+    for (int i = 0; i < n; i++) coeffs[i] = 0;
+}
+
+QExpression::QExpression(const QExpression& other) : n(other.n) {
+    coeffs = new double[n];
+    for (int i = 0; i < n; i++) {
+        coeffs[i] = other.coeffs[i];
+    }
+}
+
+QExpression::~QExpression() {
+    delete[] coeffs;
+}
+
+double QExpression::calc(double x) {
+    double res = 0;
+    double x_pow = 1;
+
+    for (int i = 0; i < n; i++) {
+        res += coeffs[i] / x_pow;
+        x_pow *= x;
+    }
+    return res;
+}
+
+std::ostream& operator<<(std::ostream& os, const QExpression& q) {
+    os << "Q(x) = ";
+    for (int i = 0; i < q.n; i++) {
+        if (i == 0)
+            os << q.coeffs[i];
+        else
+            os << " + " << q.coeffs[i] << "/x^" << i;
+    }
+    return os;
+}
+
+std::istream& operator>>(std::istream& is, QExpression& q) {
+    std::cout << "Enter " << q.n << " coefficients (from a0 to a" << q.n - 1 << "): ";
+    for (int i = 0; i < q.n; i++) {
+        is >> q.coeffs[i];
+    }
+    return is;
+}
+
+QExpression QExpression::operator+(const QExpression& other) {
+    int max_n = n > other.n ? n : other.n;
+    QExpression res(max_n);
+
+    for (int i = 0; i < max_n; i++) {
+        double a = i < n ? coeffs[i] : 0;
+        double b = i < other.n ? other.coeffs[i] : 0;
+        res.coeffs[i] = a + b;
+    }
+    return res;
+}
+
+QExpression QExpression::operator-(const QExpression& other) {
+    int max_n = n > other.n ? n : other.n;
+    QExpression res(max_n);
+
+    for (int i = 0; i < max_n; i++) {
+        double a = i < n ? coeffs[i] : 0;
+        double b = i < other.n ? other.coeffs[i] : 0;
+        res.coeffs[i] = a - b;
+    }
+    return res;
+}
+
+QExpression QExpression::operator*(double num) {
+    QExpression res(n);
+    for (int i = 0; i < n; i++)
+        res.coeffs[i] = coeffs[i] * num;
+    return res;
+}
+
+QExpression QExpression::operator/(double num) {
+    if (num == 0) {
+        std::cout << "Error: Division by zero!" << std::endl;
+        return *this;
+    }
+    QExpression res(n);
+    for (int i = 0; i < n; i++)
+        res.coeffs[i] = coeffs[i] / num;
+    return res;
 }

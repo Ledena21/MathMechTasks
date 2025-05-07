@@ -8,37 +8,39 @@ int main() {
     char op;
 
     cout << "Fraction calculator (a/b operation c/d)" << endl;
-    cout << "Available operations: + - * /" << endl;
+    cout << "Available operations: + - * / (or 'q' to quit)" << endl;
 
     cout << "Enter the first fraction (format a or a/b): ";
     cin >> a;
 
-    cout << "Enter the operation (+, -, *, /): ";
-    cin >> op;
-
     cout << "Enter the second fraction (format a or a/b): ";
     cin >> b;
 
-    Rational result;
-    switch (op) {
-    case '+':
-        result = a + b;
-        break;
-    case '-':
-        result = a - b;
-        break;
-    case '*':
-        result = a * b;
-        break;
-    case '/':
-        result = a / b;
-        break;
-    default:
-        cout << "Error: undefined operation!" << endl;
-        return 1;
-    }
+    do {
+        cout << "Choose operation (+, -, *, / or 'q' to quit): ";
+        cin >> op;
 
-    cout << "Result: " << a << " " << op << " " << b << " = " << result << endl;
+        switch (op) {
+        case '+':
+            cout << "Sum: " << a << " + " << b << " = " << a + b << endl;
+            break;
+        case '-':
+            cout << "Difference: " << a << " - " << b << " = " << a - b << endl;
+            break;
+        case '*':
+            cout << "Product: " << a << " * " << b << " = " << a * b << endl;
+            break;
+        case '/':
+            cout << "Quotient: " << a << " / " << b << " = " << a / b << endl;
+            break;
+        case 'q':
+            break;
+        default:
+            cout << "Invalid operation! Please try again." << endl;
+            break;
+        }
+    } while (op != 'q');
+
     return 0;
 }
 
@@ -122,9 +124,17 @@ Rational Rational::operator/(const Rational& other) const {
 }
 
 std::ostream& operator<<(std::ostream& os, const Rational& r) {
-    os << r.Num;
-    if (r.Den != 1) {
-        os << '/' << r.Den;
+    if (r.Den < 0) {
+        os << r.Num*(-1);
+        if (r.Den != 1) {
+            os << '/' << r.Den*(-1);
+        }
+    }
+    else {
+        os << r.Num;
+        if (r.Den != 1) {
+            os << '/' << r.Den;
+        }
     }
     return os;
 }

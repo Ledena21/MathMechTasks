@@ -1,102 +1,7 @@
+//main.cpp
+#include "fractions.h"
 #include <iostream>
 using namespace std;
-
-class Rational {
-private:
-    int Num; //числитель
-    int Den; //знаменатель
-
-    //находим НОД алгоритмом Евклида
-    int nod(int a, int b) {
-        while (b != 0) {
-            int temp = b;
-            b = a % b;
-            a = temp;
-        }
-        return a;
-    }
-
-    //функция которая сокращает
-    void reduce() {
-        int mynod = nod(Num, Den);  // НОД учитывает знаки
-        if (mynod != 0) {  //делим на НОД, если он не ноль, числитель и знаменатель (ниже)
-            Num /= mynod;
-            Den /= mynod;
-        }
-    }
-
-public:
-    // конструктор
-    Rational(int numerator = 0, int denominator = 1) : Num(numerator), Den(denominator) {
-        //если числитель не указан, он будет 0. Если знаменатель не указан, он будет 1
-        //вот это после двоеточия это мы инициализируем их до входа в тело конструктора
-        if (Den == 0) { //если знаменатель 0, то ошибка
-            cout << "Error: Denominator cannot be zero" << endl;
-            Den = 1; // чтобы на ноль не делить
-        }
-        reduce();
-    }
-
-    //перегрузим оператор сложения
-    Rational operator+(const Rational& other) const {
-        return Rational(Num * other.Den + other.Num * Den, Den * other.Den);
-        /*тут все ясно : числитель первой дроби умножается на знаменатель второй,
-        числитель второй дроби умножается на знаменатель первой.
-        числители складываем Den * other.Den - перемножаем знаменатели.
-        сии огромные числа исчезнут, когда в конструкторе мы вызовем reduce
-        */
-    }
-
-    //перегрузим оператор вычитания
-    Rational operator-(const Rational& other) const {
-        return Rational(Num * other.Den - other.Num * Den, Den * other.Den); //ну аналогично сложению
-    }
-
-    //перегрузим оператор умножения
-    Rational operator*(const Rational& other) const {
-        return Rational(Num * other.Num, Den * other.Den);
-        //перемножаем числитель с числителем, знаменатель со знаменателем
-    }
-
-    //перегрузим оператор деления
-    Rational operator/(const Rational& other) const {
-        if (other.Num == 0) { //вторая дробь переворачивается при делении, поэтому мы проверяем числитель, а не знаменатель
-            cout << "Error: Cannot divide by zero" << endl;
-            return Rational(0, 1);
-        }
-        return Rational(Num * other.Den, Den * other.Num); //перемножаем числитель на знаменатель, знаменатель на числитель
-    }
-
-    // перегрузим оператор вывода
-    friend ostream& operator<<(ostream& os, const Rational& r) {
-        os << r.Num; //выводим числитель
-        if (r.Den != 1) { //если знаменатель не единица
-            os << '/' << r.Den; //через слэш его выводим
-        }
-        return os;
-    }
-
-    //перегрузим оператор ввода
-    friend istream& operator>>(istream& is, Rational& r) {
-        //friend нужен для поступа к приватным полям
-        int num, den = 1; // num числитель, den знаменатель (по умолчанию 1)
-        //когда вводим число без знаменателя, оно идет в числитель и знаменатель по умолчанию
-        char slash;
-
-        is >> num; //считали первое число
-        if (is.peek() == '/') { //если следующий символ слэш
-            is >> slash >> den; //пропускаем его и считываем знаменатель
-        }
-
-        if (den == 0) { //если знаменатель 0
-            cerr << "Error: Denominator cannot be zero" << endl;
-            den = 1;
-        }
-
-        r = Rational(num, den); //вызвали конструктор
-        return is;
-    }
-};
 
 int main() {
     Rational a, b;
@@ -116,10 +21,18 @@ int main() {
 
     Rational result;
     switch (op) {
-    case '+': result = a + b; break;
-    case '-': result = a - b; break;
-    case '*': result = a * b; break;
-    case '/': result = a / b; break;
+    case '+':
+        result = a + b;
+        break;
+    case '-':
+        result = a - b;
+        break;
+    case '*':
+        result = a * b;
+        break;
+    case '/':
+        result = a / b;
+        break;
     default:
         cout << "Error: undefined operation!" << endl;
         return 1;
@@ -127,4 +40,107 @@ int main() {
 
     cout << "Result: " << a << " " << op << " " << b << " = " << result << endl;
     return 0;
+}
+
+
+//fractions.h
+
+#ifndef FRACTIONS_H
+#define FRACTIONS_H
+
+#include <iostream>
+
+class Rational {
+private:
+    int Num;
+    int Den;
+    int nod(int a, int b);
+    void reduce();
+
+public:
+    Rational(int numerator = 0, int denominator = 1);
+    Rational operator+(const Rational& other) const;
+    Rational operator-(const Rational& other) const;
+    Rational operator*(const Rational& other) const;
+    Rational operator/(const Rational& other) const;
+
+    friend std::ostream& operator<<(std::ostream& os, const Rational& r);
+    friend std::istream& operator>>(std::istream& is, Rational& r);
+};
+
+#endif // FRACTIONS_H#pragma once
+
+
+//fractions.cpp
+
+#include "fractions.h"
+#include <iostream>
+
+int Rational::nod(int a, int b) {
+    while (b != 0) {
+        int temp = b;
+        b = a % b;
+        a = temp;
+    }
+    return a;
+}
+
+void Rational::reduce() {
+    int mynod = nod(Num, Den);
+    if (mynod != 0) {
+        Num /= mynod;
+        Den /= mynod;
+    }
+}
+
+Rational::Rational(int numerator, int denominator) : Num(numerator), Den(denominator) {
+    if (Den == 0) {
+        std::cout << "Error: Denominator cannot be zero" << std::endl;
+        Den = 1;
+    }
+    reduce();
+}
+
+Rational Rational::operator+(const Rational& other) const {
+    return Rational(Num * other.Den + other.Num * Den, Den * other.Den);
+}
+
+Rational Rational::operator-(const Rational& other) const {
+    return Rational(Num * other.Den - other.Num * Den, Den * other.Den);
+}
+
+Rational Rational::operator*(const Rational& other) const {
+    return Rational(Num * other.Num, Den * other.Den);
+}
+
+Rational Rational::operator/(const Rational& other) const {
+    if (other.Num == 0) {
+        std::cout << "Error: Cannot divide by zero" << std::endl;
+        return Rational(0, 1);
+    }
+    return Rational(Num * other.Den, Den * other.Num);
+}
+
+std::ostream& operator<<(std::ostream& os, const Rational& r) {
+    os << r.Num;
+    if (r.Den != 1) {
+        os << '/' << r.Den;
+    }
+    return os;
+}
+
+std::istream& operator>>(std::istream& is, Rational& r) {
+    int num, den = 1;
+    is >> num;
+    if (is.peek() == '/') {
+        is.ignore() >> den;
+    }
+
+    if (den == 0) {
+        std::cout << "Error: Denominator cannot be zero" << std::endl;
+        den = 1;
+    }
+
+    r = Rational(num, den);
+    return is;
 }

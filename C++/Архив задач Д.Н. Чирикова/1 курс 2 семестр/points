@@ -155,9 +155,3 @@ void Point::distantPoints(const Point* points, int size, int& num1, int& num2, d
         }
     }
 }
-                num1 = points[i].number; //запоминаем номера точек
-                num2 = points[j].number;
-            }
-        }
-    }
-}

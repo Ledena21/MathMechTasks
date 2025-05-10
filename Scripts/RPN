@@ -102,8 +102,7 @@ function InToPost(infix) {
             lastSym = "operator"; //запоминаем, что последний символ - оператор
         }
     }
-
-    // Очищаем стек в конце
+    //очищаем стек в конце
     while (stack.length > 0) {
         let ch = stack.pop();
         if (ch === "(") {
@@ -114,33 +113,47 @@ function InToPost(infix) {
 
     return out.join("");
 }
-
 function PostToIn(postfix) {
-    let stack = []; //стек
-
-    for (let i = 0; i < postfix.length; i++) { //идем по строке
-        let chunk = postfix[i]; //берем символ
-
-        if (isOperand(chunk)) { //если это операнд
-            stack.push(chunk); //кладем его в стек
-        } else if (isOperator(chunk)) { //если это оператор
+    let stack = [];
+    for (let i = 0; i < postfix.length; i++) {
+        let chunk = postfix[i];
+        if (isOperand(chunk)) {
+            stack.push({ value: chunk, priority: 0 }); //сделаем операндам нулевой приоритет
+        } 
+        else if (isOperator(chunk)) {
             if (stack.length < 2) { //если длина стека меньше 2, ошибка
                 return "ERROR: Пропущен операнд";
             }
             //берем 2 последних элемента стека
             let right = stack.pop();
-            let left = stack.pop();            
-            stack.push("("+`${left}${chunk}${right}`+")"); //помещаем в стек эти 2 элемента, между ними ставим оператор
-        } else {
-            return "ERROR: Недопустимый символ"+chunk; //если не оператор и не операнд -> ошибка
+            let left = stack.pop();
+            let currentPriority = priority[chunk]; //приоритет текущего оператора
+            let leftExpr = left.value; //левое выражение
+            if (left.priority > currentPriority) { //если его приоритет выше текущего оператора
+                leftExpr = `(${leftExpr})`; //оно берется в скобки
+            }
+            let rightExpr = right.value; //правое выражение
+            if (right.priority > currentPriority || 
+                (right.priority === currentPriority && (chunk === '^' || chunk === '-' || chunk === '/'))) {
+                //если приоритет выше текущего оператора или приоритеты равны, но оператор правоассоциативный
+                rightExpr = `(${rightExpr})`; //оно берется в скобки
+            }
+
+            stack.push({
+                value: leftExpr + chunk + rightExpr, //новое выражение
+                priority: currentPriority //текущий приоритет
+            });
+        } 
+        else {
+            return "ERROR: Недопустимый символ " + chunk;
         }
     }
 
-    if (stack.length !== 1) { //если в стеке еще что-то осталось, ошибка
+    if (stack.length !== 1) {
         return "ERROR: Пропущен оператор";
     }
 
-    return stack[0].slice(1,-1); //берем получившееся выражение без внешних скобок
+    return stack[0].value;
 }
 
 function Calculator(expr) {
@@ -167,28 +180,28 @@ function Calculator(expr) {
     }
   }
 
-let args = process.argv.slice(2);
+  let args = process.argv.slice(2);
 
-switch (args[0]) {
-    case "-h":
-    case "--help":
-        console.log("Convert infix to postfix: node rpn.js --in2post \"expression\"");
-        console.log("Convert postfix to infix: node rpn.js --post2in \"expression\"");
-        break;
-    case "--in2post":
-        let inf = args[1].replace(/\s/g, "");
-        console.log(InToPost(inf));
-        if (InToPost(inf).includes("ERROR:")===false && /^[\d()+*\/\-.]*$/.test(inf)==true){
-            console.log("Result: "+Calculator(PostToIn(InToPost(inf))));
-        }
-        break;
-    case "--post2in":
-        let postf = args[1].replace(/\s/g, "");
-        console.log(PostToIn(postf));
-        if (PostToIn(postf).includes("ERROR:")===false && /^[\d()+*\/\-.]*$/.test(PostToIn(postf))==true){
-            console.log("Result: "+Calculator(PostToIn(postf)));
-        }
-        break;
-    default:
-        console.log("Invalid option. Use -h for help.");
-}
+  switch (args[0]) {
+      case "-h":
+      case "--help":
+          console.log("Convert infix to postfix: node rpn.js --in2post \"expression\"");
+          console.log("Convert postfix to infix: node rpn.js --post2in \"expression\"");
+          break;
+      case "--in2post":
+          let inf = args[1].replace(/\s/g, "");
+          console.log(InToPost(inf));
+          if (InToPost(inf).includes("ERROR:")===false && /^[\d()+*\/\-.]*$/.test(inf)==true){
+              console.log("Result: "+Calculator(PostToIn(InToPost(inf))));
+          }
+          break;
+      case "--post2in":
+          let postf = args[1].replace(/\s/g, "");
+          console.log(PostToIn(postf));
+          if (PostToIn(postf).includes("ERROR:")===false && /^[\d()+*\/\-.]*$/.test(PostToIn(postf))==true){
+              console.log("Result: "+Calculator(PostToIn(postf)));
+          }
+          break;
+      default:
+          console.log("Invalid option. Use -h for help.");
+  }

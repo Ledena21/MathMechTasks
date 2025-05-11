@@ -1,0 +1,129 @@
+function buildMatrix(dataLength) {
+    let m = 1;
+    while (Math.pow(2, m) < m + dataLength + 1) { //находим минимальное количество контрольных битов по формуле
+        m++;
+    }
+    let totalBits = m + dataLength; //получаем общее количество битов, исходные складываем с контрольными
+    let matrix = [];
+    for (let i = 0; i < m; i++) { //идем по каждому биту четности и создаем для него массив
+        let row = [];
+        for (let j = 1; j <= totalBits; j++) { //теперь идем по каждому номеру позиции в слове
+            let binary = j.toString(2).padStart(m, '0'); //преобразуем номер в двоичный вид с нулями спереди
+            row.push(Number(binary[m - 1 - i])); //кладем
+        }
+        matrix.push(row); //кладем в матрицу очередной ряд чисел
+    }
+    return matrix;
+}
+
+function HammingEncode(data) {
+    let dataBits = data.split('').map(bit => parseInt(bit));
+    let matrix = buildMatrix(dataBits.length); //строим матрицу
+    let m = matrix.length; //находим количество битов четности
+    let totalBits = m + dataBits.length + 1; //общее количество битов, +1 для p0
+    
+    let encoded = [0]; //начинаем с p0, он временно 0
+    
+    let dataIndex = 0;
+    for (let i = 1; i < totalBits; i++) {
+        if (Number.isInteger(Math.log2(i))) { //если это место для бита четности
+            encoded.push(0); //пока что кладем ноль
+        } else {
+            encoded.push(dataBits[dataIndex++]); //кладем биты данных
+        }
+    }
+    
+    // Вычисляем обычные биты четности
+    for (let i = 0; i < m; i++) { 
+        let parityPos = Math.pow(2, i); //место текущего бита четности
+        let sum = 0;
+        for (let j = 1; j < totalBits; j++) {
+            if (matrix[i][j-1] == 1) { //если в матрице 1
+                sum += encoded[j]; //собираем сумму
+            }
+        }
+        encoded[parityPos] = sum % 2; //на это место вычисляем бит четности, остаток суммы от деления на 2
+    }
+    let p0 = 0;
+    for (bit of encoded){ //идем по всем битам сообщения
+        p0+=bit; //собираем их сумму
+    }
+    p0 = p0 % 2; //делим сумму на 2 и получаем p0
+    encoded[0] = p0;
+    return encoded.join('');
+}
+
+function HammingDecode(encoded) {
+    let encodedBits = encoded.split('').map(bit => parseInt(bit));
+    
+    let m = 1;
+    while (Math.pow(2, m) < encodedBits.length) {
+        m++;
+    }
+    
+    let matrix = buildMatrix(encodedBits.length - m - 1); // -1 для p0
+    
+    // Проверяем p0
+    let p0 = encodedBits.reduce((sum, bit) => sum + bit, 0) % 2;
+    
+    // Проверяем обычные биты четности
+    let syndrome = [];
+    for (let i = 0; i < m; i++) {
+        let sum = 0;
+        for (let j = 1; j < encodedBits.length; j++) {
+            sum += encodedBits[j] * matrix[i][j-1];
+        }
+        syndrome.push(sum % 2);
+    }
+
+    syndrome = syndrome.reverse();
+    let errorPos = parseInt(syndrome.join(''), 2);
+    
+    // Анализируем ошибки
+    if (syndrome.some(bit => bit !== 0)) {
+        if (p0 === 1) {
+            // Одна ошибка
+            console.log("1 error detected in position " + errorPos);
+            encodedBits[errorPos] = Number(!encodedBits[errorPos]);
+        } else {
+            // Две ошибки
+            console.log("2 errors detected, cannot correct");
+            return null;
+        }
+    } else if (p0 === 1) {
+        // Ошибка в p0
+        console.log("Error in p0");
+        encodedBits[0] = Number(!encodedBits[0]);
+    }
+    
+    // Извлекаем данные
+    let decoded = [];
+    for (let i = 1; i < encodedBits.length; i++) {
+        if (!Number.isInteger(Math.log2(i))) {
+            decoded.push(encodedBits[i]);
+        }
+    }
+    return decoded.join('');
+}
+
+let args = process.argv.slice(2);
+let s = args[1];
+
+switch (args[0]) {
+    case "-h":
+    case "--help":
+        console.log("This program encodes or decodes files using Hamming encoding with extended parity bit.");
+        console.log("To use, write node humming.js [encoding or decoding] [string]");
+        break;
+    case "-e":
+    case "--encode":
+        console.log(HammingEncode(s));
+        break;
+    case "-d":
+    case "--decode":
+        console.log(HammingDecode(s));
+        break;
+    default:
+        console.log("Error: undefined option");
+        break;
+}

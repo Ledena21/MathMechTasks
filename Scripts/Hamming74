@@ -1,13 +1,13 @@
-function buildMatrix(dataLength) {
+function buildMatrix(l) {
     let m = 1;
-    while (Math.pow(2, m) < m + dataLength + 1) { //находим минимальное количество контрольных битов по формуле
+    while (Math.pow(2, m) < m + l + 1) { //находим количество контрольных битов по формуле
         m++;
     }
-    let totalBits = m + dataLength; //получаем общее количество битов, исходные складываем с контрольными
+    let allbits = m + l; //получаем общее количество битов, исходные складываем с контрольными
     let matrix = [];
     for (let i = 0; i < m; i++) { //идем по каждому биту четности и создаем для него массив
         let row = [];
-        for (let j = 1; j <= totalBits; j++) { //теперь идем по каждому номеру позиции в слове
+        for (let j = 1; j <= allbits; j++) { //теперь идем по каждому номеру позиции в слове
             let binary = j.toString(2).padStart(m, '0'); //преобразуем номер в двоичный вид с нулями спереди
             row.push(Number(binary[m - 1 - i])); //кладем
         }
@@ -16,70 +16,70 @@ function buildMatrix(dataLength) {
     return matrix;
 }
 
-function HammingEncode(data) {
-    let dataBits = data.split('').map(bit => parseInt(bit)); //разбиваем матрицу на массив чисел
-    let matrix = buildMatrix(dataBits.length); //строим матрицу
+function HammingEncode(s) {
+    let bits = s.split('').map(bit => parseInt(bit)); //разбиваем матрицу на массив чисел
+    let matrix = buildMatrix(bits.length); //строим матрицу
     let m = matrix.length; //количество битов четности
-    let totalBits = m + dataBits.length; //длина итогового сообщения
+    let allbits = m + bits.length; //длина итогового сообщения
     
-    let encoded = [];
-    let dataIndex = 0;
+    let ks = [];
+    let ind = 0;
     
-    for (let i = 1; i <= totalBits; i++) {
+    for (let i = 1; i <= allbits; i++) {
         if (Number.isInteger(Math.log2(i))) { //если i степень двойки
-            encoded.push(0); //кладем ноль, потому что это бит четности, который мы еще не посчитали
+            ks.push(0); //кладем ноль, потому что это бит четности, который мы еще не посчитали
         } else {
-            encoded.push(dataBits[dataIndex++]); //иначе кладем туда бит данных
+            ks.push(bits[ind++]); //иначе кладем туда бит данных
         }
     }
     
     for (let i = 0; i < m; i++) { //идем по битам четности
-        let parityPos = Math.pow(2, i) - 1; //найдем позицию текущего контрольного бита
+        let p = Math.pow(2, i) - 1; //найдем позицию текущего контрольного бита
         let sum = 0; //здесь считаем единицы
-        for (let j = 0; j < totalBits; j++) { //проходим по позициям закодированного слова
+        for (let j = 0; j < allbits; j++) { //проходим по позициям закодированного слова
             if (matrix[i][j] == 1) { //если в матрице 1
-                sum += encoded[j]; //считаем тот бит, который стоит в слове
+                sum += ks[j]; //считаем тот бит, который стоит в слове
             }
         }
-        encoded[parityPos] = sum % 2; //на позицию контрольного бита ставим сотаток суммы от деления на 2
+        ks[p] = sum % 2; //на позицию контрольного бита ставим сотаток суммы от деления на 2
     }
-    return encoded.join('');
+    return ks.join('');
 }
 
-function HammingDecode(encoded) {
-    let encodedBits = encoded.split('').map(bit => parseInt(bit)); //преобразуем строку
+function HammingDecode(s) {
+    let ksBits = s.split('').map(bit => parseInt(bit)); //преобразуем строку
     
     let m = 1;
-    while (Math.pow(2, m) < encodedBits.length + 1) { //считаем количество битов четности
+    while (Math.pow(2, m) < ksBits.length + 1) { //считаем количество битов четности
         m++; 
     }
     
-    let matrix = buildMatrix(encodedBits.length - m); //строим матрицу
+    let matrix = buildMatrix(ksBits.length - m); //строим матрицу
     
-    let syndrome = [];
+    let mist = [];
     for (let i = 0; i < m; i++) { //идем по матрице
         let sum = 0;
-        for (let j = 0; j < encodedBits.length; j++) {
-            sum += encodedBits[j] * matrix[i][j]; //умножаем строки матрицы на поступившую строку
+        for (let j = 0; j < ksBits.length; j++) {
+            sum += ksBits[j] * matrix[i][j]; //умножаем строки матрицы на поступившую строку
         }
-        syndrome.push(sum % 2); //кладем в массив остаток от деления на два этой суммы
+        mist.push(sum % 2); //кладем в массив остаток от деления на два этой суммы
     }
 
-    syndrome = syndrome.reverse(); //переворачиваем получившееся число
-    let errorPos = parseInt(syndrome.join(''), 2); //переводим его в десятичную систему
+    mist = mist.reverse(); //переворачиваем получившееся число
+    let error = parseInt(mist.join(''), 2); //переводим его в десятичную систему
 
-    if (errorPos-1 >=0){
-        console.log("Error in "+errorPos+" position");
-        encodedBits[errorPos-1]=Number(!encodedBits[errorPos-1]); //инвертируем нужный нам бит
+    if (error-1 >=0){
+        console.log("Error in "+error+" position");
+        ksBits[error-1]=Number(!ksBits[error-1]); //инвертируем нужный нам бит
     }
 
-    let decoded = [];
-    for (let i = 0; i < encodedBits.length; i++) {
+    let dec = [];
+    for (let i = 0; i < ksBits.length; i++) {
         if (!Number.isInteger(Math.log2(i + 1))) { //если позиция не степень двойки
-            decoded.push(encodedBits[i]); //добавляем
+            dec.push(ksBits[i]); //добавляем
         }
     }
-    return decoded.join('');
+    return dec.join('');
 }
 
 let args = process.argv.slice(2);

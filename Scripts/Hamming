@@ -1,0 +1,105 @@
+function buildMatrix(dataLength) {
+    let m = 1;
+    while (Math.pow(2, m) < m + dataLength + 1) { //находим минимальное количество контрольных битов по формуле
+        m++;
+    }
+    let totalBits = m + dataLength; //получаем общее количество битов, исходные складываем с контрольными
+    let matrix = [];
+    for (let i = 0; i < m; i++) { //идем по каждому биту четности и создаем для него массив
+        let row = [];
+        for (let j = 1; j <= totalBits; j++) { //теперь идем по каждому номеру позиции в слове
+            let binary = j.toString(2).padStart(m, '0'); //преобразуем номер в двоичный вид с нулями спереди
+            row.push(Number(binary[m - 1 - i])); //кладем
+        }
+        matrix.push(row); //кладем в матрицу очередной ряд чисел
+    }
+    return matrix;
+}
+
+function HammingEncode(data) {
+    let dataBits = data.split('').map(bit => parseInt(bit)); //разбиваем матрицу на массив чисел
+    let matrix = buildMatrix(dataBits.length); //строим матрицу
+    let m = matrix.length; //количество битов четности
+    let totalBits = m + dataBits.length; //длина итогового сообщения
+    
+    let encoded = [];
+    let dataIndex = 0;
+    
+    for (let i = 1; i <= totalBits; i++) {
+        if (Number.isInteger(Math.log2(i))) { //если i степень двойки
+            encoded.push(0); //кладем ноль, потому что это бит четности, который мы еще не посчитали
+        } else {
+            encoded.push(dataBits[dataIndex++]); //иначе кладем туда бит данных
+        }
+    }
+    
+    for (let i = 0; i < m; i++) { //идем по битам четности
+        let parityPos = Math.pow(2, i) - 1; //найдем позицию текущего контрольного бита
+        let sum = 0; //здесь считаем единицы
+        for (let j = 0; j < totalBits; j++) { //проходим по позициям закодированного слова
+            if (matrix[i][j] == 1) { //если в матрице 1
+                sum += encoded[j]; //считаем тот бит, который стоит в слове
+            }
+        }
+        encoded[parityPos] = sum % 2; //на позицию контрольного бита ставим сотаток суммы от деления на 2
+    }
+    return encoded.join('');
+}
+
+function HammingDecode(encoded) {
+    let encodedBits = encoded.split('').map(bit => parseInt(bit)); //преобразуем строку
+    
+    let m = 1;
+    while (Math.pow(2, m) < encodedBits.length + 1) { //считаем количество битов четности
+        m++; 
+    }
+    
+    let matrix = buildMatrix(encodedBits.length - m); //строим матрицу
+    
+    let syndrome = [];
+    for (let i = 0; i < m; i++) { //идем по матрице
+        let sum = 0;
+        for (let j = 0; j < encodedBits.length; j++) {
+            sum += encodedBits[j] * matrix[i][j]; //умножаем строки матрицы на поступившую строку
+        }
+        syndrome.push(sum % 2); //кладем в массив остаток от деления на два этой суммы
+    }
+
+    syndrome = syndrome.reverse(); //переворачиваем получившееся число
+    let errorPos = parseInt(syndrome.join(''), 2); //переводим его в десятичную систему
+
+    if (errorPos-1 >=0){
+        console.log("Error in "+errorPos+" position");
+        encodedBits[errorPos-1]=Number(!encodedBits[errorPos-1]); //инвертируем нужный нам бит
+    }
+
+    let decoded = [];
+    for (let i = 0; i < encodedBits.length; i++) {
+        if (!Number.isInteger(Math.log2(i + 1))) { //если позиция не степень двойки
+            decoded.push(encodedBits[i]); //добавляем
+        }
+    }
+    return decoded.join('');
+}
+
+let args = process.argv.slice(2);
+let s = args[1];
+
+switch (args[0]) {
+    case "-h":
+    case "--help":
+        console.log("This program encodes or decodes files using Hamming encoding.");
+        console.log("To use, write node humming.js [encoding or decoding] [string]");
+        break;
+    case "-e":
+    case "--encode":
+        console.log(HammingEncode(s));
+        break;
+    case "-d":
+    case "--decode":
+        console.log(HammingDecode(s));
+        break;
+    default:
+        console.log("Error: undefined option");
+        break;
+}

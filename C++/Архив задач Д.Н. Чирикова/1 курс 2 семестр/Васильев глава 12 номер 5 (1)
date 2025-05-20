@@ -1,0 +1,29 @@
+#include <iostream>
+#include <string>
+using namespace std;
+
+template <typename T>
+int countMatches(const T* array, int size, const T& value) {
+    int count = 0;
+    for (int i = 0; i < size; ++i) {
+        if (array[i] == value) ++count;
+    }
+    return count;
+}
+
+int main() {
+    int intArray[] = { 1, 2, 3, 4, 2, 5, 2 };
+    string strArray[] = { "apple", "banana", "apple", "orange" };
+
+    int intValue;
+    cout << "Enter number to search: ";
+    cin >> intValue;
+    cout << "Matches: " << countMatches(intArray, sizeof(intArray) / sizeof(int), intValue) << endl;
+
+    string strValue;
+    cout << "Enter string to search: ";
+    cin >> strValue;
+    cout << "Matches: " << countMatches(strArray, sizeof(strArray) / sizeof(string), strValue) << endl;
+
+    return 0;
+}

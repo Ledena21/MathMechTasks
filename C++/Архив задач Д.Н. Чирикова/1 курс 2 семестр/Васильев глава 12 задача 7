@@ -1,0 +1,176 @@
+#include "complex.h"
+#include <iostream>
+#include <cmath>
+
+using namespace std;
+
+double factorial(int n) {
+    double res = 1;
+    for (int i = 2; i <= n; i++) {
+        res *= i;
+    }
+    return res;
+}
+
+double mySin(double x, int terms = 10) {
+    double result = x;
+    for (int n = 1; n <= terms; n++) {
+        int power = 2 * n + 1;
+        double sign = (n % 2 == 0) ? 1 : -1;
+        double term = sign * pow(x, power) / factorial(power);
+        result += term;
+    }
+    return result;
+}
+
+Complex mySin(Complex z, int terms = 10) {
+    Complex result = z;
+    for (int n = 1; n <= terms; n++) {
+        int power = 2 * n + 1;
+        double sign = (n % 2 == 0) ? 1 : -1;
+        Complex term = z.pow(power) / factorial(power);
+        term = Complex(sign * term.getReal(), sign * term.getImag());
+        result = result + term;
+    }
+    return result;
+}
+
+int main() {
+    double real1, imag1, real2, imag2, num;
+
+    cout << "Enter the first complex number (real and imaginary parts separated by a space):";
+    cin >> real1 >> imag1;
+    Complex a(real1, imag1);
+
+    cout << "Enter the second complex number (real and imaginary parts separated by a space):";
+    cin >> real2 >> imag2;
+    Complex b(real2, imag2);
+
+    cout << "Enter real number: ";
+    cin >> num;
+
+    cout << "\nResults:\n";
+
+    Complex sum = a + b;
+    cout << "a + b = "; a.print(); cout << " + "; b.print(); cout << " = "; sum.print(); cout << endl;
+
+    Complex diff = a - b;
+    cout << "a - b = "; a.print(); cout << " - "; b.print(); cout << " = "; diff.print(); cout << endl;
+
+    Complex product = a * b;
+    cout << "a * b = "; a.print(); cout << " * "; b.print(); cout << " = "; product.print(); cout << endl;
+
+    Complex quotient = a / b;
+    cout << "a / b = "; a.print(); cout << " / "; b.print(); cout << " = "; quotient.print(); cout << endl;
+
+    Complex sum_d = a + num;
+    cout << "a + num = "; a.print(); cout << " + " << num << " = "; sum_d.print(); cout << endl;
+
+    Complex diff_d = a - num;
+    cout << "a - num = "; a.print(); cout << " - " << num << " = "; diff_d.print(); cout << endl;
+
+    Complex product_d = a - num;
+    cout << "a * num = "; a.print(); cout << " * " << num << " = "; product_d.print(); cout << endl;
+
+    Complex quotient_d = a / num;
+    cout << "a / num = "; a.print(); cout << " / " << num << " = "; quotient_d.print(); cout << endl;
+
+    cout << "\nCalculating sin:\n";
+
+    cout << "sin(" << num << ") = " << mySin(num) << endl;
+    cout << "sin(" << num << ") = " << sin(num) << endl;
+
+    Complex sin_a = mySin(a);
+    cout << "sin("; a.print(); cout << ") = "; sin_a.print(); cout << endl;
+
+    Complex sin_b = mySin(b);
+    cout << "sin("; b.print(); cout << ") = "; sin_b.print(); cout << endl;
+
+    return 0;
+}
+#ifndef COMPLEX_H
+#define COMPLEX_H
+
+#include <iostream>
+
+using namespace std;
+
+class Complex {
+private:
+    double real;
+    double imag;
+
+public:
+    Complex();
+    Complex(double r, double i = 0);
+
+    double getReal() const;
+    double getImag() const;
+
+    // Операторы Complex + Complex
+    Complex operator+(const Complex& other) const;
+    Complex operator-(const Complex& other) const;
+    Complex operator*(const Complex& other) const;
+    Complex operator/(const Complex& other) const;
+
+    // Операторы Complex + double
+    Complex operator+(double num) const;
+    Complex operator-(double num) const;
+    Complex operator*(double num) const;
+    Complex operator/(double num) const;
+
+    Complex pow(int n) const;
+    void print() const;
+};
+
+#endif // COMPLEX_H
+#include "complex.h"
+#include <cmath>
+
+using namespace std;
+
+Complex::Complex() : real(0), imag(0) {}
+
+Complex::Complex(double r, double i) : real(r), imag(i) {}
+
+double Complex::getReal() const { return real; }
+double Complex::getImag() const { return imag; }
+
+Complex Complex::operator+(const Complex& other) const {
+    return Complex(real + other.real, imag + other.imag);
+}
+
+Complex Complex::operator-(const Complex& other) const {
+    return Complex(real - other.real, imag - other.imag);
+}
+
+Complex Complex::operator*(const Complex& other) const {
+    double r = real * other.real - imag * other.imag;
+    double i = real * other.imag + imag * other.real;
+    return Complex(r, i);
+}
+
+Complex Complex::operator/(const Complex& other) const {
+    double denominator = other.real * other.real + other.imag * other.imag;
+    double r = (real * other.real + imag * other.imag) / denominator;
+    double i = (imag * other.real - real * other.imag) / denominator;
+    return Complex(r, i);
+}
+
+Complex Complex::operator/(double num) const {
+    return Complex(real / num, imag / num);
+}
+
+Complex Complex::pow(int n) const {
+    Complex result(1, 0);
+    for (int i = 0; i < n; i++) {
+        result = result * (*this);
+    }
+    return result;
+}
+
+void Complex::print() const {
+    cout << real;
+    if (imag >= 0) cout << "+";
+    cout << imag << "i";
+}

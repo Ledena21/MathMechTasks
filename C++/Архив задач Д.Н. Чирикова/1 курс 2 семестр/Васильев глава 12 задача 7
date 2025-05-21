@@ -23,11 +23,6 @@ public:
     Complex operator*(const Complex& other) const;
     Complex operator/(const Complex& other) const;
 
-    Complex operator+(double num) const;
-    Complex operator-(double num) const;
-    Complex operator*(double num) const;
-    Complex operator/(double num) const;
-
     int factorial(int n);
 
     Complex pow(int n) const;
@@ -85,22 +80,6 @@ Complex Complex::operator/(const Complex& other) const {
     return Complex(r, i);
 }
 
-Complex Complex::operator+(double num) const {
-    return Complex(real + num, imag);
-}
-
-Complex Complex::operator-(double num) const {
-    return Complex(real - num, imag);
-}
-
-Complex Complex::operator*(double num) const {
-    return Complex(real * num, imag * num);
-}
-
-Complex Complex::operator/(double num) const {
-    return Complex(real / num, imag / num);
-}
-
 Complex Complex::pow(int n) const {
     Complex result(1, 0);
     for (int i = 0; i < n; i++) {
@@ -116,7 +95,7 @@ void Complex::print() const {
 }
 
 int factorial(int n) {
-    if (n < 0) return 0; // Факториал отрицательного числа не определён
+    if (n < 0) return 0;
     int res = 1;
     for (int i = 2; i <= n; i++) {
         res *= i;
@@ -160,18 +139,6 @@ int main() {
 
     Complex quotient = a / b;
     cout << "a / b = "; a.print(); cout << " / "; b.print(); cout << " = "; quotient.print(); cout << endl;
-
-    Complex sum_d = a + num;
-    cout << "a + num = "; a.print(); cout << " + " << num << " = "; sum_d.print(); cout << endl;
-
-    Complex diff_d = a - num;
-    cout << "a - num = "; a.print(); cout << " - " << num << " = "; diff_d.print(); cout << endl;
-
-    Complex product_d = a * num;
-    cout << "a * num = "; a.print(); cout << " * " << num << " = "; product_d.print(); cout << endl;
-
-    Complex quotient_d = a / num;
-    cout << "a / num = "; a.print(); cout << " / " << num << " = "; quotient_d.print(); cout << endl;
 
     cout << "\nCalculating sin:\n";
 

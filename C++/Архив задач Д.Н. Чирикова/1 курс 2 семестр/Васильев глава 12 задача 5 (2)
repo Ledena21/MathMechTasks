@@ -2,7 +2,8 @@
 #include <string>
 using namespace std;
 
-void countDuplicates(int* arr, int size) {
+template <typename T>
+void countDuplicates(T* arr, int size) {
     bool* processed = new bool[size]();
 
     for (int i = 0; i < size; i++) {
@@ -17,7 +18,7 @@ void countDuplicates(int* arr, int size) {
         }
 
         if (count > 1) {
-            cout << arr[i] << ": " << count << endl;
+            cout << arr[i] << ": " << count << " times" << endl;
         }
     }
 
@@ -25,18 +26,13 @@ void countDuplicates(int* arr, int size) {
 }
 
 int main() {
-    int size;
-    cout << "Enter array size: ";
-    cin >> size;
-    int* arr = new int[size];
-    cout << "Enter " << size << " numbers: " << endl;
-    for (int i = 0; i < size; i++) {
-        cin >> arr[i];
-    }
+    int intArr[] = { 1, 2, 3, 2, 4, 3, 5 };
+    cout << "Duplicate integers:" << endl;
+    countDuplicates(intArr, 7);
 
-    cout << "Duplicate elements: " << endl;
-    countDuplicates(arr, size);
+    string strArr[] = { "apple", "banana", "apple", "orange", "orange"};
+    cout << "\nDuplicate strings:" << endl;
+    countDuplicates(strArr, 5);
 
-    delete[] arr;
     return 0;
 }

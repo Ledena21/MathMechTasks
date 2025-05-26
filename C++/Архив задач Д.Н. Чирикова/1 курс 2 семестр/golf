@@ -1,106 +1,78 @@
 //main.cpp
 
-#include "golf.h"
 #include <iostream>
-
+#include "golf.h"
 using namespace std;
 
 int main() {
-	const int MAX = 5;
-	golf players[MAX];
-	int count = 0;
+    Golf player("player Birdfree", 24);
+    player.show();
+    Golf player2;
 
-	golf ann("Ann Birdfree", 24);
-	ann.show();
-	cout << endl;
-	ann.setgolf();
-	ann.show();
-	cout << endl;
+    cout << "\nEnter data for a new player\n";
+    if (!player2.setGolf()) {
+        cout << "Error: name not entered" << endl;
+        return 1;
+    }
+    int ch;
+    cout << "\nEnter handicap change:\n";
+    cin >> ch;
+    player2.setHandicap(ch);
+    cout << "\nAfter handicap change:\n";
+    player2.show();
 
-	cout << "Enter players (max " << MAX << "):" << endl;
-	for (int i = 0; i < MAX; ++i) {
-		cout << "Player #" << i + 1 << ":" << endl;
-		if (!players[i].setgolf()) break;
-		count++;
-	}
-
-	if (count > 0) {
-		for (int i = 0; i < count; ++i) {
-			players[i].show();
-		}
-		cout << endl;
-		for (int i = 0; i < count; ++i) {
-			players[i].setHandicap(i);
-			players[i].show();
-		}
-	}
-
-	return 0;
+    return 0;
 }
-
 
 // golf.cpp
 
-#include "golf.h"
 #include <iostream>
-#include <string>
 #include <cstring>
-
+#include "golf.h"
 using namespace std;
 
-golf::golf() {
-    fullname[0] = '\0';
-    handicap = 0;
-}
-
-golf::golf(const char* name, int hc) {
-    strncpy_s(fullname, Len, name, _TRUNCATE);
+Golf::Golf(const char* name, int hc) {
+    strncpy_s(fullname, name, Len - 1);
     handicap = hc;
 }
 
-bool golf::setgolf() {
-    char name[Len];
-    int hc;
-
-    cout << "Enter name of player: ";
-    cin.getline(name, Len);
-    if (name[0] == '\0') return false;
-
-    cout << "Enter handicap: ";
-    cin >> hc;
+bool Golf::setGolf() {
+    char tempName[Len];
+    int tempHc;
+    cout << "Enter player name: ";
+    cin.getline(tempName, Len);
+    if (tempName[0] == '\0'){
+        cout << "Error: name not entered" << endl;
+        return 0;
+    }
+    cout << "Enter player handicap: ";
+    cin >> tempHc;
     cin.ignore();
-
-    *this = golf(name, hc);
-    return true;
+    *this = Golf(tempName, tempHc);
+    return 1;
 }
 
-void golf::setHandicap(int hc) {
+void Golf::setHandicap(int hc) {
     handicap = hc;
 }
 
-void golf::show() const {
-    cout << "Name: " << fullname << "\nHandicap: " << handicap << endl;
+void Golf::show() const {
+    cout << "Name: " << fullname << ", Handicap: " << handicap << endl;
 }
 
 
 //golf.h
 
 #pragma once
-#ifndef GOLF_H_
-#define GOLF_H_
+class Golf {
+private:
+    static const int Len = 40;
+    char fullname[Len];
+    int handicap;
 
-#include <iostream>
-
-class golf {
-	enum { Len = 40 };
-	char fullname[Len];
-	int handicap;
 public:
-	golf();
-	golf(const char* name, int hc);
-	bool setgolf();
-	void setHandicap(int hc);
-	void show() const;
+    Golf(const char* name = "", int hc = 0);
+    bool setGolf();
+    void setHandicap(int hc);
+    void show() const;
 };
-
-#endif

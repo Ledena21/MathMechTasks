@@ -1,0 +1,106 @@
+//main.cpp
+
+#include "golf.h"
+#include <iostream>
+
+using namespace std;
+
+int main() {
+	const int MAX = 5;
+	golf players[MAX];
+	int count = 0;
+
+	golf ann("Ann Birdfree", 24);
+	ann.show();
+	cout << endl;
+	ann.setgolf();
+	ann.show();
+	cout << endl;
+
+	cout << "Enter players (max " << MAX << "):" << endl;
+	for (int i = 0; i < MAX; ++i) {
+		cout << "Player #" << i + 1 << ":" << endl;
+		if (!players[i].setgolf()) break;
+		count++;
+	}
+
+	if (count > 0) {
+		for (int i = 0; i < count; ++i) {
+			players[i].show();
+		}
+		cout << endl;
+		for (int i = 0; i < count; ++i) {
+			players[i].setHandicap(i);
+			players[i].show();
+		}
+	}
+
+	return 0;
+}
+
+
+// golf.cpp
+
+#include "golf.h"
+#include <iostream>
+#include <string>
+#include <cstring>
+
+using namespace std;
+
+golf::golf() {
+    fullname[0] = '\0';
+    handicap = 0;
+}
+
+golf::golf(const char* name, int hc) {
+    strncpy_s(fullname, Len, name, _TRUNCATE);
+    handicap = hc;
+}
+
+bool golf::setgolf() {
+    char name[Len];
+    int hc;
+
+    cout << "Enter name of player: ";
+    cin.getline(name, Len);
+    if (name[0] == '\0') return false;
+
+    cout << "Enter handicap: ";
+    cin >> hc;
+    cin.ignore();
+
+    *this = golf(name, hc);
+    return true;
+}
+
+void golf::setHandicap(int hc) {
+    handicap = hc;
+}
+
+void golf::show() const {
+    cout << "Name: " << fullname << "\nHandicap: " << handicap << endl;
+}
+
+
+//golf.h
+
+#pragma once
+#ifndef GOLF_H_
+#define GOLF_H_
+
+#include <iostream>
+
+class golf {
+	enum { Len = 40 };
+	char fullname[Len];
+	int handicap;
+public:
+	golf();
+	golf(const char* name, int hc);
+	bool setgolf();
+	void setHandicap(int hc);
+	void show() const;
+};
+
+#endif

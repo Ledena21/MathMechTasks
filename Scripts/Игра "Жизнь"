@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Игра "Жизнь"</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .controls {
+            margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+        }
+        .control-group {
+            display: flex;
+            align-items: center;
+            margin-right: 20px;
+        }
+        label {
+            margin-right: 5px;
+        }
+        input {
+            width: 60px;
+            padding: 5px;
+        }
+        button {
+            padding: 5px 15px;
+            cursor: pointer;
+        }
+        .game-container {
+            margin-top: 20px;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(20px, 1fr));
+            gap: 1px;
+            margin-bottom: 20px;
+        }
+        .cell {
+            width: 20px;
+            height: 20px;
+            border: 1px solid #ccc;
+            cursor: pointer;
+        }
+        .alive {
+            background-color: green;
+        }
+        .dead {
+            background-color: white;
+        }
+        .file-input {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .hidden {
+            display: none;
+        }
+        #file-input {
+            display: none;
+        }
+        .file-label {
+            padding: 5px 15px;
+            background-color: #f0f0f0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+    </style>
+</head>
+<body>
+    <h1>Игра "Жизнь"</h1>
+    
+    <div id="initial-controls" class="controls">
+        <div class="control-group">
+            <label for="width">Ширина:</label>
+            <input type="number" id="width" value="25" min="1">
+        </div>
+        <div class="control-group">
+            <label for="height">Высота:</label>
+            <input type="number" id="height" value="25" min="1">
+        </div>
+        <button id="generate-btn">Generate</button>
+        
+        <div class="file-input">
+            <label for="file-input" class="file-label">Load from file</label>
+            <input type="file" id="file-input" accept=".txt">
+        </div>
+    </div>
+    
+    <div id="game-container" class="game-container hidden">
+        <div id="grid" class="grid"></div>
+        <div class="controls">
+            <button id="start-btn">Start</button>
+            <button id="stop-btn" disabled>Stop</button>
+            <button id="step-btn">Step</button>
+            <button id="random-btn">Random</button>
+            <button id="clear-btn">Clear</button>
+        </div>
+    </div>
+    
+    <script>
+        // DOM элементы
+        const initialControls = document.getElementById('initial-controls');
+        const gameContainer = document.getElementById('game-container');
+        const grid = document.getElementById('grid');
+        const widthInput = document.getElementById('width');
+        const heightInput = document.getElementById('height');
+        const generateBtn = document.getElementById('generate-btn');
+        const fileInput = document.getElementById('file-input');
+        const startBtn = document.getElementById('start-btn');
+        const stopBtn = document.getElementById('stop-btn');
+        const stepBtn = document.getElementById('step-btn');
+        const randomBtn = document.getElementById('random-btn');
+        const clearBtn = document.getElementById('clear-btn');
+        const resetBtn = document.getElementById('reset-btn');
+        
+        // Параметры игры
+        let width = 25;
+        let height = 25;
+        let cells = [];
+        let isRunning = false;
+        let animationId = null;
+        let initialCellsState = [];
+        
+        // Инициализация игры
+        function initGame(initialWidth, initialHeight, initialCells = null) {
+            width = initialWidth;
+            height = initialHeight;
+            
+            // Создаем пустую сетку
+            cells = Array(height).fill().map(() => Array(width).fill(0));
+            
+            // Если переданы начальные клетки, используем их
+            if (initialCells) {
+                for (let y = 0; y < Math.min(height, initialCells.length); y++) {
+                    for (let x = 0; x < Math.min(width, initialCells[y].length); x++) {
+                        cells[y][x] = initialCells[y][x];
+                    }
+                }
+            }
+            
+            // Сохраняем начальное состояние
+            initialCellsState = JSON.parse(JSON.stringify(cells));
+            
+            renderGrid();
+            gameContainer.classList.remove('hidden');
+        }
+        
+        // Отрисовка сетки
+        function renderGrid() {
+            grid.innerHTML = '';
+            grid.style.gridTemplateColumns = `repeat(${width}, 20px)`;
+            
+            for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
+                    const cell = document.createElement('div');
+                    cell.className = `cell ${cells[y][x] ? 'alive' : 'dead'}`;
+                    cell.dataset.x = x;
+                    cell.dataset.y = y;
+                    
+                    cell.addEventListener('click', () => {
+                        cells[y][x] = cells[y][x] ? 0 : 1;
+                        cell.className = `cell ${cells[y][x] ? 'alive' : 'dead'}`;
+                    });
+                    
+                    grid.appendChild(cell);
+                }
+            }
+        }
+        
+        // Подсчет живых соседей с учетом тора (замкнутости границ)
+        function countLiveNeighbors(x, y) {
+            let count = 0;
+            
+            for (let dy = -1; dy <= 1; dy++) {
+                for (let dx = -1; dx <= 1; dx++) {
+                    if (dx === 0 && dy === 0) continue;
+                    
+                    const nx = (x + dx + width) % width;
+                    const ny = (y + dy + height) % height;
+                    
+                    if (cells[ny][nx]) {
+                        count++;
+                    }
+                }
+            }
+            
+            return count;
+        }
+        
+        // Следующее поколение
+        function nextGeneration() {
+            const newCells = Array(height).fill().map(() => Array(width).fill(0));
+            
+            for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
+                    const neighbors = countLiveNeighbors(x, y);
+                    
+                    if (cells[y][x]) {
+                        // Правила для живых клеток
+                        newCells[y][x] = (neighbors === 2 || neighbors === 3) ? 1 : 0;
+                    } else {
+                        // Правила для мертвых клеток
+                        newCells[y][x] = (neighbors === 3) ? 1 : 0;
+                    }
+                }
+            }
+            
+            // Проверка на окончание игры (все клетки мертвы или состояние не изменилось)
+            const allDead = newCells.every(row => row.every(cell => cell === 0));
+            const unchanged = JSON.stringify(cells) === JSON.stringify(newCells);
+            
+            if (allDead) {
+                stopGame();
+                alert('Игра окончена: все клетки мертвы!');
+            } else if (unchanged) {
+                stopGame();
+                alert('Игра окончена: состояние стабилизировалось!');
+            }
+            
+            cells = newCells;
+            renderGrid();
+        }
+        
+        // Запуск игры
+        function startGame() {
+            if (isRunning) return;
+            
+            isRunning = true;
+            startBtn.disabled = true;
+            stopBtn.disabled = false;
+            
+            function gameLoop() {
+                nextGeneration();
+                if (isRunning) {
+                    animationId = setTimeout(gameLoop, 200);
+                }
+            }
+            
+            gameLoop();
+        }
+        
+        // Остановка игры
+        function stopGame() {
+            isRunning = false;
+            clearTimeout(animationId);
+            startBtn.disabled = false;
+            stopBtn.disabled = true;
+        }
+        
+        // Случайное заполнение
+        function randomFill() {
+            for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
+                    cells[y][x] = Math.random() > 0.7 ? 1 : 0;
+                }
+            }
+            renderGrid();
+        }
+        
+        // Очистка поля
+        function clearField() {
+            for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
+                    cells[y][x] = 0;
+                }
+            }
+            renderGrid();
+        }
+        
+        // Сброс к начальному состоянию
+        function resetField() {
+            cells = JSON.parse(JSON.stringify(initialCellsState));
+            renderGrid();
+        }
+        
+        // Обработчики событий
+        generateBtn.addEventListener('click', () => {
+            const widthValue = parseInt(widthInput.value) || 25;
+            const heightValue = parseInt(heightInput.value) || 25;
+            
+            initGame(widthValue, heightValue);
+        });
+        
+        fileInput.addEventListener('change', function(e) {
+            if (this.files.length === 0) return;
+            
+            const file = this.files[0];
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                const content = e.target.result;
+                const lines = content.split('\n');
+                const initialCells = [];
+                
+                let maxWidth = 0;
+                
+                for (const line of lines) {
+                    const trimmedLine = line.trim();
+                    if (trimmedLine) {
+                        const row = [];
+                        for (const char of trimmedLine) {
+                            if (char === '0' || char === '1') {
+                                row.push(parseInt(char));
+                            }
+                        }
+                        initialCells.push(row);
+                        maxWidth = Math.max(maxWidth, row.length);
+                    }
+                }
+                
+                // Если файл пустой, используем размеры по умолчанию
+                const heightValue = initialCells.length || 25;
+                const widthValue = maxWidth || 25;
+                
+                widthInput.value = widthValue;
+                heightInput.value = heightValue;
+                
+                initGame(widthValue, heightValue, initialCells);
+            };
+            
+            reader.readAsText(file);
+        });
+        
+        startBtn.addEventListener('click', startGame);
+        stopBtn.addEventListener('click', stopGame);
+        stepBtn.addEventListener('click', nextGeneration);
+        randomBtn.addEventListener('click', randomFill);
+        clearBtn.addEventListener('click', clearField);
+        resetBtn.addEventListener('click', resetField);
+    </script>
+</body>
+</html>

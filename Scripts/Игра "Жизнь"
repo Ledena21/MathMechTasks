@@ -1,9 +1,9 @@
-<!DOCTYPE html>
-<html lang="ru">
+<!DOCTYPE html>  <!-- тип документа -->
+<html lang="ru"> <!-- указываем язык -->
 <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-8"> <!-- указываем кодировку -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Игра "Жизнь"</title>
+    <title>Игра "Жизнь"</title> <!-- заголовок страницы -->
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -108,20 +108,19 @@
     </div>
     
     <script>
-        // DOM элементы
-        const initialControls = document.getElementById('initial-controls');
-        const gameContainer = document.getElementById('game-container');
-        const grid = document.getElementById('grid');
-        const widthInput = document.getElementById('width');
-        const heightInput = document.getElementById('height');
-        const generateBtn = document.getElementById('generate-btn');
-        const fileInput = document.getElementById('file-input');
-        const startBtn = document.getElementById('start-btn');
-        const stopBtn = document.getElementById('stop-btn');
-        const stepBtn = document.getElementById('step-btn');
-        const randomBtn = document.getElementById('random-btn');
-        const clearBtn = document.getElementById('clear-btn');
-        const resetBtn = document.getElementById('reset-btn');
+        let initialControls = document.getElementById('initial-controls');
+        let gameContainer = document.getElementById('game-container');
+        let grid = document.getElementById('grid');
+        let widthInput = document.getElementById('width');
+        let heightInput = document.getElementById('height');
+        let generateBtn = document.getElementById('generate-btn');
+        let fileInput = document.getElementById('file-input');
+        let startBtn = document.getElementById('start-btn');
+        let stopBtn = document.getElementById('stop-btn');
+        let stepBtn = document.getElementById('step-btn');
+        let randomBtn = document.getElementById('random-btn');
+        let clearBtn = document.getElementById('clear-btn');
+        let resetBtn = document.getElementById('reset-btn');
         
         
         let width = 25;
@@ -162,7 +161,7 @@
             
             for (let y = 0; y < height; y++) {
                 for (let x = 0; x < width; x++) {
-                    const cell = document.createElement('div');
+                    let cell = document.createElement('div');
                     cell.className = `cell ${cells[y][x] ? 'alive' : 'dead'}`;
                     cell.dataset.x = x;
                     cell.dataset.y = y;
@@ -185,8 +184,8 @@
                 for (let dx = -1; dx <= 1; dx++) {
                     if (dx === 0 && dy === 0) continue;
                     
-                    const nx = (x + dx + width) % width;
-                    const ny = (y + dy + height) % height;
+                    let nx = (x + dx + width) % width;
+                    let ny = (y + dy + height) % height;
                     
                     if (cells[ny][nx]) {
                         count++;
@@ -199,11 +198,11 @@
         
         
         function nextGeneration() {
-            const newCells = Array(height).fill().map(() => Array(width).fill(0));
+            let newCells = Array(height).fill().map(() => Array(width).fill(0));
             
             for (let y = 0; y < height; y++) {
                 for (let x = 0; x < width; x++) {
-                    const neighbors = countLiveNeighbors(x, y);
+                    let neighbors = countLiveNeighbors(x, y);
                     
                     if (cells[y][x]) {
                         
@@ -216,15 +215,15 @@
             }
             
             
-            const allDead = newCells.every(row => row.every(cell => cell === 0));
-            const unchanged = JSON.stringify(cells) === JSON.stringify(newCells);
+            let allDead = newCells.every(row => row.every(cell => cell === 0));
+            let unchanged = JSON.stringify(cells) === JSON.stringify(newCells);
             
             if (allDead) {
                 stopGame();
                 alert('Игра окончена: все клетки мертвы!');
             } else if (unchanged) {
                 stopGame();
-                alert('Игра окончена: состояние стабилизировалось!');
+                alert('Игра окончена: два соседних поколения одинаковы!');
             }
             
             cells = newCells;
@@ -285,8 +284,8 @@
         
         
         generateBtn.addEventListener('click', () => {
-            const widthValue = parseInt(widthInput.value) || 25;
-            const heightValue = parseInt(heightInput.value) || 25;
+            let widthValue = parseInt(widthInput.value) || 25;
+            let heightValue = parseInt(heightInput.value) || 25;
             
             initGame(widthValue, heightValue);
         });
@@ -294,21 +293,21 @@
         fileInput.addEventListener('change', function(e) {
             if (this.files.length === 0) return;
             
-            const file = this.files[0];
-            const reader = new FileReader();
+            let file = this.files[0];
+            let reader = new FileReader();
             
             reader.onload = function(e) {
-                const content = e.target.result;
-                const lines = content.split('\n');
-                const initialCells = [];
+                let content = e.target.result;
+                let lines = content.split('\n');
+                let initialCells = [];
                 
                 let maxWidth = 0;
                 
-                for (const line of lines) {
-                    const trimmedLine = line.trim();
+                for (let line of lines) {
+                    let trimmedLine = line.trim();
                     if (trimmedLine) {
-                        const row = [];
-                        for (const char of trimmedLine) {
+                        let row = [];
+                        for (let char of trimmedLine) {
                             if (char === '0' || char === '1') {
                                 row.push(parseInt(char));
                             }
@@ -319,8 +318,8 @@
                 }
                 
                 
-                const heightValue = initialCells.length || 25;
-                const widthValue = maxWidth || 25;
+                let heightValue = initialCells.length || 25;
+                let widthValue = maxWidth || 25;
                 
                 widthInput.value = widthValue;
                 heightInput.value = heightValue;

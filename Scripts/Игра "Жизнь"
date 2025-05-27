@@ -123,7 +123,7 @@
         const clearBtn = document.getElementById('clear-btn');
         const resetBtn = document.getElementById('reset-btn');
         
-        // Параметры игры
+        
         let width = 25;
         let height = 25;
         let cells = [];
@@ -131,15 +131,15 @@
         let animationId = null;
         let initialCellsState = [];
         
-        // Инициализация игры
+        
         function initGame(initialWidth, initialHeight, initialCells = null) {
             width = initialWidth;
             height = initialHeight;
             
-            // Создаем пустую сетку
+            
             cells = Array(height).fill().map(() => Array(width).fill(0));
             
-            // Если переданы начальные клетки, используем их
+            
             if (initialCells) {
                 for (let y = 0; y < Math.min(height, initialCells.length); y++) {
                     for (let x = 0; x < Math.min(width, initialCells[y].length); x++) {
@@ -148,14 +148,14 @@
                 }
             }
             
-            // Сохраняем начальное состояние
+            
             initialCellsState = JSON.parse(JSON.stringify(cells));
             
             renderGrid();
             gameContainer.classList.remove('hidden');
         }
         
-        // Отрисовка сетки
+        
         function renderGrid() {
             grid.innerHTML = '';
             grid.style.gridTemplateColumns = `repeat(${width}, 20px)`;
@@ -177,7 +177,7 @@
             }
         }
         
-        // Подсчет живых соседей с учетом тора (замкнутости границ)
+        
         function countLiveNeighbors(x, y) {
             let count = 0;
             
@@ -197,7 +197,7 @@
             return count;
         }
         
-        // Следующее поколение
+        
         function nextGeneration() {
             const newCells = Array(height).fill().map(() => Array(width).fill(0));
             
@@ -206,16 +206,16 @@
                     const neighbors = countLiveNeighbors(x, y);
                     
                     if (cells[y][x]) {
-                        // Правила для живых клеток
+                        
                         newCells[y][x] = (neighbors === 2 || neighbors === 3) ? 1 : 0;
                     } else {
-                        // Правила для мертвых клеток
+                        
                         newCells[y][x] = (neighbors === 3) ? 1 : 0;
                     }
                 }
             }
             
-            // Проверка на окончание игры (все клетки мертвы или состояние не изменилось)
+            
             const allDead = newCells.every(row => row.every(cell => cell === 0));
             const unchanged = JSON.stringify(cells) === JSON.stringify(newCells);
             
@@ -231,7 +231,7 @@
             renderGrid();
         }
         
-        // Запуск игры
+       
         function startGame() {
             if (isRunning) return;
             
@@ -249,7 +249,7 @@
             gameLoop();
         }
         
-        // Остановка игры
+        
         function stopGame() {
             isRunning = false;
             clearTimeout(animationId);
@@ -257,7 +257,7 @@
             stopBtn.disabled = true;
         }
         
-        // Случайное заполнение
+       
         function randomFill() {
             for (let y = 0; y < height; y++) {
                 for (let x = 0; x < width; x++) {
@@ -267,7 +267,7 @@
             renderGrid();
         }
         
-        // Очистка поля
+       
         function clearField() {
             for (let y = 0; y < height; y++) {
                 for (let x = 0; x < width; x++) {
@@ -277,13 +277,13 @@
             renderGrid();
         }
         
-        // Сброс к начальному состоянию
+        
         function resetField() {
             cells = JSON.parse(JSON.stringify(initialCellsState));
             renderGrid();
         }
         
-        // Обработчики событий
+        
         generateBtn.addEventListener('click', () => {
             const widthValue = parseInt(widthInput.value) || 25;
             const heightValue = parseInt(heightInput.value) || 25;
@@ -318,7 +318,7 @@
                     }
                 }
                 
-                // Если файл пустой, используем размеры по умолчанию
+                
                 const heightValue = initialCells.length || 25;
                 const widthValue = maxWidth || 25;
                 

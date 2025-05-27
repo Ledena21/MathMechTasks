@@ -1,5 +1,5 @@
 //main.cpp
-// main.cpp
+
 #include <iostream>
 #include <cstdlib>
 #include <ctime>
@@ -101,9 +101,8 @@ bool newcustomer(double x) {
 }
 
 
-//queue.h
-
 // queue.h
+
 #ifndef QUEUE_H__
 #define QUEUE_H__
 

@@ -11,22 +11,23 @@ void ungetch(int);
 //getch.cpp
 
 #include <stdio.h>
-#define BUFSIZE 100
+#define BUFSIZE 100 //максимальный размер буфера
 
-char buf[BUFSIZE]; /* буфер для ungetch */
-int bufp = 0; /* след, свободная позиция в буфере */
+char buf[BUFSIZE]; /* буфер для ungetch, массив символов, куда складываем символы, которые нужно вернуть в поток ввода */
+int bufp = 0; /* след, свободная позиция в буфере, когда буфер пуст, равна 0 */
 
-int getch(void) /* взять (возможно возвращенный) символ */
-{
+int getch(void){ /* взять (возможно возвращенный) символ */
 	return (bufp > 0) ? buf[--bufp] : getchar();
+	/* если в буфере есть символы (bufp>0), возвращаем символ с позиции bufp и уменьшаем bufp на 1*/
 }
 
-void ungetch(int c) /* вернуть символ на ввод */
-{
-	if (bufp >= BUFSIZE)
-		printf("ungetch: слишком много символов\n");
-	else
-		buf[bufp++] = c;
+void ungetch(int c){ /* вернуть символ на ввод */
+	if (bufp >= BUFSIZE) { //если буфер переполнен, выводим сообщение об ошибке.
+		printf("ungetch: too many chars\n");
+	}
+	else {
+		buf[bufp++] = c; //есть место, после последнего символа кладем символ c в буфер
+	}
 }
 
 
@@ -41,10 +42,12 @@ double val[MAXVAL]; /* стек */
 
 /* push: положить значение f в стек */
 void push(double f) {
-	if (sp < MAXVAL)
+	if (sp < MAXVAL) {
 		val[sp++] = f;
-	else
+	}
+	else {
 		printf("ошибка: стек полон, %g не помещается", f);
+	}
 }
 
 /* pop: взять с вершины стека и выдать в качестве результата */
@@ -52,7 +55,7 @@ double pop(void) {
 	if (sp > 0)
 		return val[--sp];
 	else {
-		printf("ошибка: стек пуст");
+		printf("Error: stack is empty");
 		return 0.0;
 	}
 }
@@ -60,7 +63,7 @@ double pop(void) {
 
 //getop.cpp
 
-#include <ctype.h>
+#include <ctype.h> // для isdigit, isalpha
 #include <stdio.h>
 #include <string.h>
 #include "calc.h"
@@ -69,10 +72,15 @@ int getch(void);
 void ungetch(int);
 
 int getop(char s[]) {
-	int i, c;
-
-	while ((s[0] = c = getch()) == ' ' || c == '\t');
-	s[1] = '\0';
+	int i, c; //i индекс в строке s, c текущий символ
+	while (true) {
+		c = getch(); //получаем символ
+		s[0] = c; //записываем в s[0]
+		if (c != ' ' && c != '\t') {  //если не пробел и не таб
+			break; //выходим из цикла
+		}
+	}
+	s[1] = '\0'; //завершаем строку
 
 	if (!isdigit(c) && c != '.' && c != '-') {
 		i = 0;
@@ -80,15 +88,21 @@ int getop(char s[]) {
 			while (isalpha(s[++i] = c = getch()));
 			s[i] = '\0';
 			ungetch(c);
-
-			if (strcmp(s, "sin") == 0) return 's';
-			if (strcmp(s, "e") == 0) return 'e';
-			if (strcmp(s, "^") == 0) return '^';
-			if (strcmp(s, "q") == 0) return 'q';
+			if (strcmp(s, "sin") == 0){
+				return 's';
+			}
+			if (strcmp(s, "e") == 0){
+				return 'e';
+			}
+			if (strcmp(s, "^") == 0){
+				return '^';
+			} 
+			if (strcmp(s, "q") == 0) {
+				return 'q';
+			} 
 		}
 		return c; /* не число */
 	}
-
 	i = 0;
 	if (c == '-') {
 		if (isdigit(c = getch()) || c == '.') {
@@ -99,18 +113,17 @@ int getop(char s[]) {
 			return '-';
 		}
 	}
-
 	if (isdigit(c)) /* накапливаем целую часть */
 		while (isdigit(s[++i] = c = getch()));
 	if (c == '.') /* накапливаем дробную часть */
 		while (isdigit(s[++i] = c = getch()));
 	s[i] = '\0';
 
-	if (c != EOF)
+	if (c != EOF){
 		ungetch(c);
+	}
 	return NUMBER;
 }
-
 
 //main.cpp
 
@@ -119,7 +132,6 @@ int getop(char s[]) {
 #include <math.h>
 #include <string.h>
 #include "calc.h"
-
 #define MAXOP 100
 
 int main() {
@@ -127,8 +139,8 @@ int main() {
     double op1, op2;
     char s[MAXOP];
 
-    printf("Калькулятор (поддерживает +, -, *, /, ^, e, sin)\n");
-    printf("Введите выражение в обратной польской записи (для выхода введите q)\n");
+    printf("Calculator (supports +, -, *, /, ^, e, sin)\n");
+    printf("Enter the expression in reverse polish notation (type q to exit)\n");
 
     while ((type = getop(s)) != EOF) {
         switch (type) {
@@ -147,10 +159,12 @@ int main() {
             break;
         case '/':
             op2 = pop();
-            if (op2 != 0.0)
+            if (op2 != 0.0) {
                 push(pop() / op2);
-            else
-                printf("ошибка: деление на нуль\n");
+            }
+            else {
+                printf("Error: division by zero\n");
+            }
             break;
         case 's':
             push(sin(pop()));
@@ -161,10 +175,12 @@ int main() {
         case '^':
             op2 = pop();
             op1 = pop();
-            if (op1 == 0.0 && op2 <= 0.0)
-                printf("ошибка: основание 0 при степени <= 0\n");
-            else
+            if (op1 == 0.0 && op2 <= 0.0) {
+                printf("Error: base 0 when degree <= 0\n");
+            }
+            else {
                 push(pow(op1, op2));
+            } 
             break;
         case 'q':
             return 0;
@@ -172,7 +188,7 @@ int main() {
             printf("%.8g\n", pop());
             break;
         default:
-            printf("ошибка: неизвестная операция %s\n", s);
+            printf("Error: undefined operation % s\n", s);
             break;
         }
     }

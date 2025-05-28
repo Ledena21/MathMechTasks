@@ -9,10 +9,6 @@ int main() {
     Stonewt st2(154);
     Stonewt st3;
 
-    cout << "st1: " << st1 << endl;
-    cout << "st2: " << st2 << endl;
-    cout << "st3: " << st3 << endl;
-
     st1.set_pound_int_mode();
     st2.set_pound_dbl_mode();
     st3.set_stone_mode();
@@ -50,11 +46,11 @@ public:
     enum Mode { STONE, POUND_INT, POUND_DBL };
 
 private:
-    enum { Lbs_per_stn = 14 }; //фунтов на стоне
-    int stone; //полных стоунов
-    double pds_left; //дробное число фунтов
-    double pounds; //общий вес в фунтах
-    Mode mode; //текущий режим отображения
+    enum { Lbs_per_stn = 14 }; // фунтов на стоун
+    int stone; // полных стоунов
+    double pds_left; // дробное число фунтов
+    double pounds; // общий вес в фунтах
+    Mode mode; // текущий режим отображения
 
 public:
     Stonewt(double lbs, Mode form = POUND_DBL);
@@ -65,6 +61,9 @@ public:
     void set_stone_mode() { mode = STONE; }
     void set_pound_int_mode() { mode = POUND_INT; }
     void set_pound_dbl_mode() { mode = POUND_DBL; }
+
+    operator int() const { return int(pounds + 0.5); }
+    operator double() const { return pounds; }
 
     Stonewt operator+(const Stonewt& st) const;
     Stonewt operator-(const Stonewt& st) const;
@@ -79,22 +78,21 @@ public:
 
 //stonewt.cpp
 
-#include <iostream>
 #include "stonewt.h"
-
+#include <iostream>
 using std::cout;
 
-Stonewt::Stonewt(double lbs, Mode form) {
-    stone = int(lbs) / Lbs_per_stn;
-    pds_left = int(lbs) % Lbs_per_stn + lbs - int(lbs);
-    pounds = lbs;
-    mode = form;
+Stonewt::Stonewt(double lbs, Mode form) { //в фунтах
+    stone = int(lbs) / Lbs_per_stn; //полных стоунов
+    pds_left = int(lbs) % Lbs_per_stn + lbs - int(lbs); //остаток в фунтах
+    pounds = lbs; //общий вес в фунтах
+    mode = form; //форма вывода
 }
 
-Stonewt::Stonewt(int stn, double lbs, Mode form) {
+Stonewt::Stonewt(int stn, double lbs, Mode form) { //в стоунах и фунтах
     stone = stn;
     pds_left = lbs;
-    pounds = stn * Lbs_per_stn + lbs;
+    pounds = stn * Lbs_per_stn + lbs; //переводим всё в фунты
     mode = form;
 }
 
@@ -119,16 +117,15 @@ Stonewt Stonewt::operator*(double n) const {
 }
 
 std::ostream& operator<<(std::ostream& os, const Stonewt& st) {
-    switch (st.mode)
-    {
-    case Stonewt::STONE:
+    switch (st.mode) {
+    case Stonewt::STONE: //стоуны и фунты
         os << st.stone << " stone, " << st.pds_left << " pounds";
         break;
-    case Stonewt::POUND_INT:
-        os << int(st.pounds) << " pounds";
+    case Stonewt::POUND_INT: //дробные фунты
+        os << std::round(st.pounds) << " pounds (int)";
         break;
-    case Stonewt::POUND_DBL:
-        os << st.pounds << " pounds";
+    case Stonewt::POUND_DBL: //полное число фунтов
+        os << st.pounds << " pounds (double)";
         break;
     }
     return os;

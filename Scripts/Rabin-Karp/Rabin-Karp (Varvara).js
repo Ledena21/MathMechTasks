@@ -3,6 +3,11 @@ let fs = require('fs');
 function readFile(filename) {
     return fs.readFileSync(filename, 'utf-8').trim();//читаем файл, трим убирает лишние пробелы.дальше работаем со строкой
 }
+
+
+Сложность O(n*m)
+
+
 function brutForce(s, t) {//алгоритм брут форса
     let n = s.length;
     let m = t.length;
@@ -31,6 +36,8 @@ function brutForce(s, t) {//алгоритм брут форса
         SymbolComparing: comparisons
     };
 }
+Сложность: в среднем O(n+m), в худшем O(n*m)
+
 function hashS(s, t, M = 1000000007) {//алг. хэш-суммы, М рандомное число большое
     let n = s.length;
     let m = t.length;
@@ -46,11 +53,13 @@ function hashS(s, t, M = 1000000007) {//алг. хэш-суммы, М рандо
         hashS = (hashS + s.charCodeAt(i)) % M;
     }
     for (let i = 0; i <= n - m; i++) { //перебираем все начальные позиции подстроки в строке
+//i - текущая начальная позиция подстроки в тексте s; n - длина текста s, m - длина шаблона t;
+//Условие гарантирует, что подстрока длины m полностью помещается в оставшейся части текста                  
         if (hashS === hashT) { //если хэши совпали
-            let match = true;//проверяем на коллизии
-            for (let j = 0; j < m; j++) {
+            let match = true;//проверяем на коллизии            
+            for (let j = 0; j < m; j++) {// перебор символов
                 comparisons++;
-                if (s[i + j] !== t[j]) {
+                if (s[i + j] !== t[j]) {// {s[i + j] - символ в тексте на позиции i+j; t[j] - символ в шаблоне на позиции j
                     match = false;
                     break;
                 }
@@ -75,6 +84,7 @@ function hashS(s, t, M = 1000000007) {//алг. хэш-суммы, М рандо
         SymbolComparing: comparisons
     };
 }
+Сложность: в среднем O(n+m), в худшем O(n*m)
 
 function rabinK(s, t, M = 1000000007) {
     let n = s.length;

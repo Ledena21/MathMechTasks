@@ -1,99 +1,98 @@
 class Hamming {
-    static getParityBits(n) {
         let k = 0;
         while (Math.pow(2, k) < n + k + 1) k++;
         return k;
     }
 
-    static isPowerOfTwo(x) {
-        return x > 0 && (x & (x - 1)) === 0;
+    static isPowerOfTwo(x) { Для степени двойки в битовом представлении есть ровно одна единица!!
+        return x > 0 && (x & (x - 1)) === 0; проверяем что х полож И далее сравниваем х с х-1 (когда мы вычитаем 1 все 0 справа от младшей единицы становятся 1 а сама младшая 1 теперь 0)
     }
 
     static encode(data) {
 
-        if (!data || !/^[01]+$/.test(data)) {//исправила проверку входных данных в енкоде
+        if (!data || !/^[01]+$/.test(data)) {//Проверка входных данных (должны быть только 0 и 1) и что data сущ и не пустое 
             throw new Error("Формат входных данных: строка из 0 и 1");
         }
 
-        const n = data.length;
-        const k = this.getParityBits(n);
-        const m = n + k;
-        const codeword = [];
-        let dataIndex = 0;
+        const n = data.length;  длина исходных данных (бит)
+        const k = this.getParityBits(n);  количество контрольных бит (вычисляется методом getParityBits())
+        const m = n + k; общая длина кодового слова (n + k)
+        const codeword = [];Инициализирует пустой массив codeword для будущего кодового слова
+        let dataIndex = 0; Создаёт индекс dataIndex для отслеживания позиции в исходных данных
 
         for (let i = 1; i <= m; i++) { //здесь отделение битов данных от битов четности происходит неявно
             if (this.isPowerOfTwo(i)) {
-                codeword[i-1] = 0; //тут бит четности и пока он 0
+                codeword[i-1] = 0; // Позиция для контрольного бита (четности)(пока 0)
+      Если позиция i — степень двойки это контрольный бит, инициализируется нулём.     
             } else {
                 codeword[i-1] = parseInt(data[dataIndex++]); //бит данных
             }
-        }
+        }Расчёт контрольных битов (чётность)
         for (let p = 0; p < k; p++) { 
-            const parityPos = Math.pow(2, p) - 1;
+            const parityPos = Math.pow(2, p) - 1; // Позиция контрольного бита (0, 1, 3, ...)
             let parity = 0;
-
+    // Проход по всем битам, которые контролирует этот бит чётности
             for (let i = parityPos; i < m; i += 2 * (parityPos + 1)) {
                 for (let j = i; j < Math.min(i + parityPos + 1, m); j++) {
-                    parity ^= codeword[j];
+                    parity ^= codeword[j]; // XOR для вычисления чётности
                 }
             }
 
-            codeword[parityPos] = parity;
+            codeword[parityPos] = parity;// Записываем результат
         }
 
-        return codeword.join('');
+        return codeword.join(''); Преобразует массив codeword в строку 
     }
 
     static decode(codeword) {
 
-        if (!codeword || !/^[01]+$/.test(codeword)) {//исправила проверку входных данных в декоде
+        if (!codeword || !/^[01]+$/.test(codeword)) {//проверка входных данных в декоде
             throw new Error("Закодированные данные должны быть строкой из 0 и 1");
         }
 
-        const bits = codeword.split('').map(bit => parseInt(bit, 10));
-        const m = bits.length;
+        const bits = codeword.split('').map(bit => parseInt(bit, 10)); преобразует строку в массив чиселчерез ,
+        const m = bits.length;  общая длина кодового слова.
         let syndrome = 0;
     
         let k = 0;
-        while (Math.pow(2, k) <= m) k++;
+        while (Math.pow(2, k) <= m) k++; Вычисляет, сколько контрольных битов k использовалось при кодировании.
 
         for (let p = 0; p < k; p++) {
-            const parityPos = Math.pow(2, p) - 1;
+            const parityPos = Math.pow(2, p) - 1; // Позиция контрольного бита (0,1,3...)
             let parity = 0;
-
+// Проверка зоны ответственности контрольного бита
             for (let i = parityPos; i < m; i += 2 * (parityPos + 1)) {
                 for (let j = i; j < Math.min(i + parityPos + 1, m); j++) {
                     if (j !== parityPos) { //исключаю контрольный бит
-                        parity ^= bits[j];
+                        parity ^= bits[j]; // Вычисляем чётность
                     }
                 }
             }
 
-            if (parity !== bits[parityPos]) {
-                syndrome += Math.pow(2, p);
+            if (parity !== bits[parityPos]) {// Сравниваем вычисленную чётность с сохранённым контрольным битом
+                syndrome += Math.pow(2, p); // Добавляем позицию ошибочного бита
             }
         }
         const dataBits = [];
         for (let i = 0; i < m; i++) {
-            if (!this.isPowerOfTwo(i + 1)) { //если текущ позиция не степень 2
-                dataBits.push(bits[i]); //бит данных
-            }
+            if (!this.isPowerOfTwo(i + 1)) { //если текущ позиция не степень 2 (+1 тк индексы с 0 нач
+                dataBits.push(bits[i]); //бит добавляется в массив.мы так собираем только битв данных, пропуская контрольные
         }
         //биты на позициях степени 2 пропускаются, это и есть биты четности
-        const data = dataBits.join('');
+        const data = dataBits.join('');// массив битов в строку
         
         if (syndrome > 0) {
-            if (syndrome <= m) {
+            if (syndrome <= m) {Проверяет, что ошибка находится в пределах кодового слова
 
-                bits[syndrome - 1] ^= 1;
-                
+                bits[syndrome - 1] ^= 1; Проверяет, что ошибка находится в пределах кодового слова
+                ^= 1 - побитовое XOR (инверсия бита)
                 const correctedDataBits = [];
                 for (let i = 0; i < m; i++) {
                     if (!this.isPowerOfTwo(i + 1)) {
-                        correctedDataBits.push(bits[i]);
+                        correctedDataBits.push(bits[i]);Повторно извлекает информационные биты (аналогично предыдущему шагу)
                     }
                 }
-                const correctedData = correctedDataBits.join('');
+                const correctedData = correctedDataBits.join('');Пропускает контрольные биты на позициях степеней двойки
                 
                 return {
                     error: `Ошибка в ${syndrome} бите`,

@@ -1,5 +1,5 @@
 let args = process.argv.slice(2);//извлекаем аргументы ком.строки
-let mode = args.find(arg => arg === '--in2post' || arg === '--post2in');
+let mode = args.find(arg => arg === '--in2post' || arg === '--post2in'); Ищет в массиве args аргумент, который соответствует либо --in2post, либо --post2in
 let expression = args.find(arg => arg !== mode)?.replace(/\s+/g, '') || ''; //1 эл не флаг, защита от оштбок и безопасный вызов реплейс. игнорируем пробелы во всей строке
 //если слева ноль или undef. то пустая строка будет аргументом 
 if (!mode || !expression) {//проверка аргументов
@@ -15,7 +15,7 @@ let priority = {//расставляем приоритеты операций
     '-': 3
 };
 
-function operator(token) {//проверка является ли переданный симв. алгебраическим оператором
+function operator(token) {//проверка является ли переданный симв. алгебраическим оператором true/false
     return ['+', '-', '*', '/', '^'].includes(token);
 }
 
@@ -24,10 +24,10 @@ function operand(token) {//проверкаа операндов
 }
 
 function in2post(infix) {//инфиксное выражение в постфиксную форму
-    let output = [];//массивдля выодной строки
+    let output = [];//массив для выходной строки
     let stack = [];//стек для операторов и скобок
     let bracket = 0;//считает скобки
-    let lastsimvol = null;//последний сивол
+    let lastsimvol = null;//последний символ
     let infixtemp = '';//с ее помощью будем модифицировать стр
 
     for (let i = 0; i < infix.length; i++) {

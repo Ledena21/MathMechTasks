@@ -1,3 +1,5 @@
+Сложность: O(n*m), где n - длина текста, m - длина шаблона
+
 let fs = require('fs');
 
 function readFile(filename) {
@@ -46,11 +48,13 @@ function hashS(s, t, M = 1000000007) {//алг. хэш-суммы, М рандо
         hashS = (hashS + s.charCodeAt(i)) % M;
     }
     for (let i = 0; i <= n - m; i++) { //перебираем все начальные позиции подстроки в строке
+i - текущая начальная позиция подстроки в тексте s; n - длина текста s, m - длина шаблона t;
+Условие гарантирует, что подстрока длины m полностью помещается в оставшейся части текста          
         if (hashS === hashT) { //если хэши совпали
             let match = true;//проверяем на коллизии
-            for (let j = 0; j < m; j++) {
+            for (let j = 0; j < m; j++) { перебор символов
                 comparisons++;
-                if (s[i + j] !== t[j]) {
+                if (s[i + j] !== t[j]) {s[i + j] - символ в тексте на позиции i+j; t[j] - символ в шаблоне на позиции j
                     match = false;
                     break;
                 }
@@ -137,26 +141,26 @@ class DFA {
         return [...new Set(str)];//создаем множество из симв стр и преобразуем его в массив перед этим удаляя дублекаты
     }
 
-    statesT() {
+    statesT() { строим таблицу состояний
         let states = {};
         let pattern = this.pattern;
         
         for (let i = 0; i <= pattern.length; i++) {
             let prefix = pattern.slice(0, i);//префикс шаблона
-            states[i] = { name: prefix };//сост соотв префиксу
+            states[i] = { name: prefix };//состояние соответств префиксу
             
-            for (let char of this.alphabet) {// опред переод для каждого символа
+            for (let char of this.alphabet) {// опред переход для каждого символа
                 let newPrefix = prefix + char;// добавляем символ к префиксу
                 
-                while (newPrefix.length > 0 && !pattern.startsWith(newPrefix)) {// наодим макс суффикс который и явл префиксом шаблона
+                while (newPrefix.length > 0 && !pattern.startsWith(newPrefix)) {// находим макс суффикс который и явл префиксом шаблона
                     //сокращаем префикс пока не найдем совпадение
                     newPrefix = newPrefix.slice(1);
                 }
                 
-                states[i][char] = newPrefix.length;// сор переод в состояние с длиной префикса
+                states[i][char] = newPrefix.length;// сохр переход в состояние с длиной префикса
             }
             
-            states[i]['*'] = 0;//если симв не из алфавита то переод в состояние 0
+            states[i]['*'] = 0;//если симв не из алфавита то переход в состояние 0
         }
         
         return states;
@@ -165,8 +169,8 @@ class DFA {
     search(text) {
         let currentState = 0;
         let result = [];
-        let patternLength = this.pattern.length;
-        let comparisons = 0;
+        let patternLength = this.pattern.length; / Длина искомого шаблона
+        let comparisons = 0; // Счетчик сравнений символов
         
         for (let i = 0; i < text.length; i++) {
             let char = text[i];// выбираем симв для переода
@@ -177,7 +181,7 @@ class DFA {
             if (currentState === patternLength) {//если дошли до конечного состояния то нашли вхождение
                 let startIndex = i - patternLength + 1;//считаем начало вхождения
                 result.push(startIndex);// сейвим позицию
-                currentState = this.states[currentState]['*'];//обнуляем для новых вхождений
+                currentState = this.states[currentState]['*'];//Сбрасывает текущее состояние автомата в состояние по умолчанию ('*')
                 if (result.length === 10) break;//так как нам нужны первые 10
             }
             

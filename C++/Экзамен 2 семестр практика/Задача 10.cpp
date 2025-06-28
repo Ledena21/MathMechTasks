@@ -116,7 +116,7 @@ int main() {
     CarRegistry registry;
     string targetBrand;
 
-    registry.readFromFile("C:/MathMech/car_owners.txt");
+    registry.readFromFile("car_owners.txt");
 
     cout << "Enter car brand to search: "; // ввод нужной марки
     cin >> targetBrand;

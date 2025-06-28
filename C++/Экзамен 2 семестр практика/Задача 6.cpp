@@ -122,7 +122,7 @@ public:
             file << "No debtors" << endl;
         }
         else {
-            file << "List of debtors:" << endl; // выводим должников
+            file << "List of debtors:" << endl; // пишем в файл должников
             for (int i = 0; i < debtors.size(); i++){
                 file << "Telephone: " << debtors[i].getPhoneNumber()
                     << ", FullName: " << debtors[i].getFullName()
@@ -130,7 +130,7 @@ public:
             }
         }
 
-        file << "\nList of other subscribers:" << endl;  // выводим не-должников
+        file << "\nList of other subscribers:" << endl;  // пишем в файл не-должников
         for (size_t i = 0; i < nonDebtors.size(); ++i) {
             if (nonDebtors[i].getBalance() >= 0) {
                 file << "Telephone: " << nonDebtors[i].getPhoneNumber()

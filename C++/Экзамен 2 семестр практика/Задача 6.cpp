@@ -12,21 +12,22 @@ using namespace std;
 
 class PhoneSubscriber {
 private:
-    string phoneNumber;
-    string fullName;
-    double balance;
+    string phoneNumber; // номер телефона
+    string fullName; // ФИО
+    double balance; // баланс
 
 public:
-    PhoneSubscriber(string phone, string name, double bal)
+    PhoneSubscriber(string phone, string name, double bal) // конструктор, инициализирует поля принятыми значениями
         : phoneNumber(phone), fullName(name), balance(bal) {}
 
+    // функции-геттеры, которые позволяют нам узнать информацию о пользователях
     string getPhoneNumber() const { return phoneNumber; }
     string getFullName() const { return fullName; }
     double getBalance() const { return balance; }
 
-    bool isDebtor() const { return balance < 0; }
+    bool isDebtor() const { return balance < 0; } // проверка на должника, если баланс <0 => должник
 
-    void printInfo() const {
+    void printInfo() const { // функция печатает информацию об абоненте
         cout << "Telephon: " << phoneNumber
             << ", Name: " << fullName
             << ", Balance: " << balance << endl;
@@ -35,10 +36,11 @@ public:
 
 class PhoneStation {
 private:
-    vector<PhoneSubscriber> subscribers;
+    vector<PhoneSubscriber> subscribers; // массив для хранения всех абонентов
 
     void bubbleSortDebtors(vector<PhoneSubscriber>& debtors) {
-        int n = debtors.size();
+        int n = debtors.size(); // смотрим размер массива, т.е. количество должников
+        // пузырьковая сортировка
         for (int i = 0; i < n - 1; i++) {
             for (int j = 0; j < n - i - 1; j++) {
                 if ((-1)*(debtors[j].getBalance()) > ((debtors[j + 1].getBalance()))*(-1)) {
@@ -49,7 +51,8 @@ private:
     }
 
     void bubbleSortNonDebtors(vector<PhoneSubscriber>& nonDebtors) {
-        int n = nonDebtors.size();
+        int n = nonDebtors.size(); // смотрим размер массива, т.е. количество не-должников
+        // пузырьковая сортировка
         for (int i = 0; i < n - 1; i++) {
             for (int j = 0; j < n - i - 1; j++) {
                 if (nonDebtors[j].getFullName() > nonDebtors[j + 1].getFullName()) {
@@ -61,27 +64,33 @@ private:
 
 public:
     void addSubscriber(const PhoneSubscriber& sub) {
-        subscribers.push_back(sub);
+        subscribers.push_back(sub); // добавляем абонента
     }
 
     void readFromFile(const string& filename) {
         ifstream file(filename);
         if (!file.is_open()) {
-            cerr << "Error reading!" << endl;
+            cerr << "Ошибка открытия файла!" << endl;
             return;
         }
-
-        string phone, name;
-        double balance;
-
-        while (getline(file, phone)) {
-            getline(file, name);
-            file >> balance;
-            file.ignore();
-
-            addSubscriber(PhoneSubscriber(phone, name, balance));
+    
+        string line;
+        while (getline(file, line)) {
+            if (line.empty()) continue;
+    
+            size_t first_space = line.find(' ');
+            size_t last_space = line.rfind(' ');
+    
+            string phone = line.substr(0, first_space);
+            string fio = line.substr(first_space + 1, last_space - first_space - 1);
+            string balance_str = line.substr(last_space + 1);
+    
+            double balance = 0.0;
+            
+            balance = atof(balance_str.c_str());
+    
+            addSubscriber(PhoneSubscriber(phone, fio, balance));
         }
-
         file.close();
     }
 

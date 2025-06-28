@@ -119,7 +119,7 @@ int main() {
     setlocale(LC_ALL, "Russian");
     Bank bank;
 
-    bank.readFromFile("C:/MathMech/depositors.txt");
+    bank.readFromFile("depositors.txt");
     char searchDigit;
     cout << "Enter the first digit of deposit number to search: ";
     cin >> searchDigit;

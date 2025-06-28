@@ -1,6 +1,6 @@
-/*В файле записана информация об абонентах телефонной станции. Абонент на телефонной станции представлен номером телефона, 
-ФИО абонента и некоторой суммой денег (если сумма <0, то это должник). Создать два списка абонентов телефонной станции: 
-должников упорядочить по убыванию суммы долга, остальных - по алфавиту ФИО. Оба списка записать в результирующий файл. 
+/*В файле записана информация об абонентах телефонной станции. Абонент на телефонной станции представлен номером телефона,
+ФИО абонента и некоторой суммой денег (если сумма <0, то это должник). Создать два списка абонентов телефонной станции:
+должников упорядочить по убыванию суммы долга, остальных - по алфавиту ФИО. Оба списка записать в результирующий файл.
 Выдать соответствующее сообщение, если должников нет. Написать соответствующий класс и методы.*/
 
 #include <iostream>
@@ -38,19 +38,20 @@ class PhoneStation {
 private:
     vector<PhoneSubscriber> subscribers; // массив для хранения всех абонентов
 
-    void bubbleSortDebtors(vector<PhoneSubscriber>& debtors) {
+    void bubbleSortDebtors(vector<PhoneSubscriber>& debtors) const {
         int n = debtors.size(); // смотрим размер массива, т.е. количество должников
         // пузырьковая сортировка
         for (int i = 0; i < n - 1; i++) {
             for (int j = 0; j < n - i - 1; j++) {
-                if ((-1)*(debtors[j].getBalance()) > ((debtors[j + 1].getBalance()))*(-1)) {
+                // (-1) нужен ниже для корректного сравнения, потому что долги с минусом
+                if ((-1) * (debtors[j].getBalance()) > ((debtors[j + 1].getBalance())) * (-1)) {
                     swap(debtors[j], debtors[j + 1]);
                 }
             }
         }
     }
 
-    void bubbleSortNonDebtors(vector<PhoneSubscriber>& nonDebtors) {
+    void bubbleSortNonDebtors(vector<PhoneSubscriber>& nonDebtors) const {
         int n = nonDebtors.size(); // смотрим размер массива, т.е. количество не-должников
         // пузырьковая сортировка
         for (int i = 0; i < n - 1; i++) {
@@ -69,77 +70,72 @@ public:
 
     void readFromFile(const string& filename) {
         ifstream file(filename);
-        if (!file.is_open()) {
-            cerr << "Ошибка открытия файла!" << endl;
+        if (!file.is_open()) { // если файл не открылся
+            cerr << "Error of opening file!" << endl;
             return;
         }
-    
-        string line;
-        while (getline(file, line)) {
-            if (line.empty()) continue;
-    
-            size_t first_space = line.find(' ');
-            size_t last_space = line.rfind(' ');
-    
-            string phone = line.substr(0, first_space);
-            string fio = line.substr(first_space + 1, last_space - first_space - 1);
-            string balance_str = line.substr(last_space + 1);
-    
-            double balance = 0.0;
-            
-            balance = atof(balance_str.c_str());
-    
-            addSubscriber(PhoneSubscriber(phone, fio, balance));
+
+        string line; // сюда будем считывать строки из файла
+        while (getline(file, line)) { // пока есть строка
+            if (line.empty()) continue; // пустую пропускаем
+
+            size_t first_space = line.find(' '); // найдем первый пробел
+            size_t last_space = line.rfind(' '); // найдем последний пробел
+
+            string phone = line.substr(0, first_space); // берем номер телефона
+            string fio = line.substr(first_space + 1, last_space - first_space - 1); // берем ФИО
+            string balance_str = line.substr(last_space + 1); // берем баланс
+
+            double balance = 0.0; // сюда мы положим числовое значение баланса, потому что считали мы строку
+            balance = atof(balance_str.c_str()); // преобразуем си строку в число
+
+            addSubscriber(PhoneSubscriber(phone, fio, balance)); // создаем абонента, суем в массив
         }
         file.close();
     }
 
     void separateSubscribers(vector<PhoneSubscriber>& debtors,
-        vector<PhoneSubscriber>& nonDebtors) const {
-        for (const auto& sub : subscribers) {
-            if (sub.isDebtor()) {
-                debtors.push_back(sub);
+        vector<PhoneSubscriber>& nonDebtors) { // массивы для должников и для не-должников
+        for (int i = 0; i < debtors.size(); i++) {
+            if (debtors[i].isDebtor()) { // если должник, кладем в соответствующий массив
+                debtors.push_back(debtors[i]);
             }
             else {
-                nonDebtors.push_back(sub);
+                nonDebtors.push_back(debtors[i]);
             }
         }
     }
 
-    void writeResultsToFile(const string& filename) const {
-        ofstream file(filename);
-        if (!file.is_open()) {
+    void writeResultsToFile(const string& filename) {
+        ofstream file(filename); // создаем/перезаписываем файл с указанным именем
+        if (!file.is_open()) { // если не получилось, выводим ошибку
             cerr << "Error writing!" << endl;
             return;
         }
 
-        vector<PhoneSubscriber> debtors, nonDebtors;
-        separateSubscribers(debtors, nonDebtors);
+        vector<PhoneSubscriber> debtors, nonDebtors; // создаем два массива
+        separateSubscribers(debtors, nonDebtors); // заполняем их
 
-        // Сортировка
-        PhoneStation* nonConstThis = const_cast<PhoneStation*>(this);
-        nonConstThis->bubbleSortDebtors(debtors);
-        nonConstThis->bubbleSortNonDebtors(nonDebtors);
+        bubbleSortDebtors(debtors); // сортируем дожников
+        bubbleSortNonDebtors(nonDebtors); // сортируем всех остальных
 
-        if (debtors.empty()) {
-            file << "Должников нет" << endl;
+        if (debtors.empty()) { // если массив пуст
+            file << "No debtors" << endl;
         }
         else {
-            file << "Список должников (по убыванию суммы долга):" << endl;
-            for (int i = debtors.size() - 1; i >= 0; i--) {
-                file << "Телефон: " << debtors[i].getPhoneNumber()
-                    << ", ФИО: " << debtors[i].getFullName()
-                    << ", Долг: " << debtors[i].getBalance() << endl;
+            file << "List of debtors:" << endl;
+            for (int i = 0; i < debtors.size(); i++) { // идем по массиву должников, всех выводим
+                file << "Telephone: " << debtors[i].getPhoneNumber()
+                    << ", FullName: " << debtors[i].getFullName()
+                    << ", Debt: " << debtors[i].getBalance() << endl;
             }
         }
 
-        file << "\nСписок остальных абонентов (по алфавиту ФИО):" << endl;
-        for (const auto& sub : nonDebtors) {
-            if (sub.getBalance() >= 0) {
-                file << "Телефон: " << sub.getPhoneNumber()
-                    << ", ФИО: " << sub.getFullName()
-                    << ", Баланс: " << sub.getBalance() << endl;
-            }
+        file << "\nList of other subscribers:" << endl;
+        for (int i = 0; i < nonDebtors.size(); i++) { // идем по массиву не-должников, всех выводим
+            file << "Telephone: " << nonDebtors[i].getPhoneNumber()
+            << ", FullName: " << nonDebtors[i].getFullName()
+            << ", Debt: " << nonDebtors[i].getBalance() << endl;
         }
 
         file.close();
@@ -147,13 +143,11 @@ public:
 };
 
 int main() {
-    setlocale(LC_ALL, "Russian");
     PhoneStation station;
 
-    station.readFromFile("C:/MathMech/subscribers.txt");
-    station.writeResultsToFile("result.txt");
+    station.readFromFile("subscribers.txt"); // читаем из файла, указываем путь до файла
+    station.writeResultsToFile("result.txt"); // записываем в файл, указываем имя файла
 
-    cout << "Обработка завершена. Результаты записаны в файл result.txt" << endl;
-
+    cout << "Processing complete. Results written to file result.txt" << endl;
     return 0;
 }
